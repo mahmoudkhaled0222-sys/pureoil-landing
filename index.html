@@ -1769,8 +1769,12 @@ document.querySelectorAll('a[href^="tel:"]').forEach(function(el){
 document.querySelectorAll('.branch-card a').forEach(function(el){
   el.addEventListener('click',function(){
     var branch=el.closest('.branch-card');
-    var branchName=branch?branch.querySelector('h3').textContent:'unknown';
-    var type=el.href.includes('maps')?'maps':el.href.includes('wa.me')?'whatsapp':'phone';
+    var nameEl=branch?(branch.querySelector('.branch-name')||branch.querySelector('h3')||branch.querySelector('h2')):null;
+    var branchName=nameEl?nameEl.textContent.replace(/[📍\s]+/g,' ').trim():'unknown';
+    var type='other';
+    if(el.href.indexOf('maps')>-1||el.classList.contains('branch-btn-map'))type='maps';
+    else if(el.href.indexOf('wa.me')>-1||el.classList.contains('branch-btn-wa'))type='whatsapp';
+    else if(el.href.indexOf('tel:')>-1||el.classList.contains('branch-btn-call'))type='phone';
     trackEvent('branches','branch_'+type+'_click',branchName);
   });
 });
