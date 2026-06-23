@@ -1,66 +1,107 @@
 /* ============================================================
-   Google Apps Script — Pure Oil Analytics Backend (v2)
+   Google Apps Script — Pure Oil Analytics Backend (v3)
+   v3: Adds franchise lead → email notification
    انسخ كل الكود ده وحطه فى script.google.com
    ============================================================ */
 
 const SHEET_NAME='events';
+const FRANCHISE_SHEET='franchise_leads';
+
+/* === EMAIL CONFIG === */
+const NOTIFY_EMAILS=[
+  'mahmoudkhaled0222@gmail.com',
+  'info@pureoil.sa'  /* غيّر للإيميل الرسمى الصحيح لو مختلف */
+];
 
 function doPost(e){
   try{
     var data=JSON.parse(e.postData.contents);
     var ss=SpreadsheetApp.getActiveSpreadsheet();
+
+    /* ===== FRANCHISE LEAD ===== */
+    if(data.category==='franchise'){
+      var fsh=ss.getSheetByName(FRANCHISE_SHEET)||initFranchiseSheet(ss);
+      fsh.appendRow([
+        new Date(),
+        data.franchise_name||'',
+        data.franchise_phone||'',
+        data.franchise_email||'',
+        data.franchise_city||'',
+        data.franchise_haslocation||'',
+        data.franchise_message||'',
+        data.platform||'direct',
+        data.ref||''
+      ]);
+      /* Send email notification */
+      var subject='🎯 طلب امتياز تجاري جديد — '+(data.franchise_name||'بدون اسم');
+      var body=
+        '<div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right">'+
+        '<h2 style="color:#D4A017">طلب امتياز تجاري جديد</h2>'+
+        '<table style="border-collapse:collapse;width:100%;max-width:600px">'+
+          row('الاسم',data.franchise_name)+
+          row('الجوال',data.franchise_phone)+
+          row('الإيميل',data.franchise_email)+
+          row('المدينة',data.franchise_city)+
+          row('موقع جاهز؟',data.franchise_haslocation)+
+          row('رسالة',data.franchise_message)+
+          row('مصدر الترافيك',data.platform)+
+          row('الوقت',new Date().toLocaleString('ar-EG'))+
+        '</table>'+
+        '<p style="margin-top:24px;color:#666;font-size:12px">— أُرسل تلقائياً من الموقع pureoil.vercel.app</p>'+
+        '</div>';
+      try{
+        MailApp.sendEmail({
+          to:NOTIFY_EMAILS.join(','),
+          subject:subject,
+          htmlBody:body,
+          replyTo:data.franchise_email||''
+        });
+      }catch(em){
+        /* Log mail error but don't fail the request */
+        Logger.log('Mail error: '+em);
+      }
+      return jsonResponse({ok:true,type:'franchise'});
+    }
+
+    /* ===== REGULAR EVENT ===== */
     var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss);
     sh.appendRow([
       data.ts||new Date().toISOString(),
-      data.sid||'',
-      data.vid||'',
-      data.category||'',
-      data.action||'',
-      data.label||'',
-      data.page||'',
-      data.ref||'',
-      data.platform||'direct',
-      data.utm_source||'',
-      data.utm_medium||'',
-      data.utm_campaign||'',
-      data.utm_content||'',
-      data.ua||'',
-      data.lang||'',
-      data.w||'',
-      data.h||''
+      data.sid||'',data.vid||'',
+      data.category||'',data.action||'',data.label||'',
+      data.page||'',data.ref||'',data.platform||'direct',
+      data.utm_source||'',data.utm_medium||'',data.utm_campaign||'',data.utm_content||'',
+      data.ua||'',data.lang||'',data.w||'',data.h||''
     ]);
-    return ContentService.createTextOutput(JSON.stringify({ok:true}))
-      .setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse({ok:true});
   }catch(err){
-    return ContentService.createTextOutput(JSON.stringify({ok:false,err:err.toString()}))
-      .setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse({ok:false,err:err.toString()});
   }
 }
 
+function row(label,value){
+  return '<tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;width:140px">'+label+'</td>'+
+    '<td style="padding:8px;border:1px solid #ddd">'+(value||'-')+'</td></tr>';
+}
+
 function doGet(e){
-  var action=(e.parameter&&e.parameter.action)||'list';
-  if(action==='list'){
-    var ss=SpreadsheetApp.getActiveSpreadsheet();
-    var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss);
-    var rows=sh.getDataRange().getValues();
-    if(rows.length<=1){
-      return jsonResponse({events:[]});
-    }
-    var events=[];
-    var start=Math.max(1,rows.length-5000);
-    for(var i=start;i<rows.length;i++){
-      var r=rows[i];
-      events.push({
-        ts:r[0] instanceof Date?r[0].toISOString():r[0],
-        sid:r[1],vid:r[2],category:r[3],action:r[4],label:r[5],
-        page:r[6],ref:r[7],platform:r[8]||'direct',
-        utm_source:r[9],utm_medium:r[10],utm_campaign:r[11],utm_content:r[12],
-        ua:r[13],lang:r[14],w:r[15],h:r[16]
-      });
-    }
-    return jsonResponse({events:events});
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss);
+  var rows=sh.getDataRange().getValues();
+  if(rows.length<=1)return jsonResponse({events:[]});
+  var events=[];
+  var start=Math.max(1,rows.length-5000);
+  for(var i=start;i<rows.length;i++){
+    var r=rows[i];
+    events.push({
+      ts:r[0] instanceof Date?r[0].toISOString():r[0],
+      sid:r[1],vid:r[2],category:r[3],action:r[4],label:r[5],
+      page:r[6],ref:r[7],platform:r[8]||'direct',
+      utm_source:r[9],utm_medium:r[10],utm_campaign:r[11],utm_content:r[12],
+      ua:r[13],lang:r[14],w:r[15],h:r[16]
+    });
   }
-  return jsonResponse({ok:false,err:'unknown action'});
+  return jsonResponse({events:events});
 }
 
 function jsonResponse(obj){
@@ -71,6 +112,13 @@ function jsonResponse(obj){
 function initSheet(ss){
   var sh=ss.insertSheet(SHEET_NAME);
   sh.appendRow(['timestamp','session_id','visitor_id','category','action','label','page','referrer','platform','utm_source','utm_medium','utm_campaign','utm_content','user_agent','language','screen_w','screen_h']);
+  sh.setFrozenRows(1);
+  return sh;
+}
+
+function initFranchiseSheet(ss){
+  var sh=ss.insertSheet(FRANCHISE_SHEET);
+  sh.appendRow(['تاريخ','الاسم','الجوال','الإيميل','المدينة','موقع جاهز','الرسالة','المصدر','referrer']);
   sh.setFrozenRows(1);
   return sh;
 }
