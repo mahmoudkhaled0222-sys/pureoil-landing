@@ -1,0 +1,70 @@
+/* ============================================================
+   Google Apps Script — Pure Oil Analytics Backend
+   انسخ كل الكود ده وحطه فى script.google.com
+   ============================================================ */
+
+const SHEET_NAME='events';
+
+function doPost(e){
+  try{
+    var data=JSON.parse(e.postData.contents);
+    var ss=SpreadsheetApp.getActiveSpreadsheet();
+    var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss);
+    sh.appendRow([
+      data.ts||new Date().toISOString(),
+      data.sid||'',
+      data.vid||'',
+      data.category||'',
+      data.action||'',
+      data.label||'',
+      data.page||'',
+      data.ref||'',
+      data.ua||'',
+      data.lang||'',
+      data.w||'',
+      data.h||''
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }catch(err){
+    return ContentService.createTextOutput(JSON.stringify({ok:false,err:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e){
+  var action=(e.parameter&&e.parameter.action)||'list';
+  if(action==='list'){
+    var ss=SpreadsheetApp.getActiveSpreadsheet();
+    var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss);
+    var rows=sh.getDataRange().getValues();
+    if(rows.length<=1){
+      return jsonResponse({events:[]});
+    }
+    var events=[];
+    /* اقرأ آخر 5000 صف بحد أقصى لتجنب البطء */
+    var start=Math.max(1,rows.length-5000);
+    for(var i=start;i<rows.length;i++){
+      var r=rows[i];
+      events.push({
+        ts:r[0] instanceof Date?r[0].toISOString():r[0],
+        sid:r[1],vid:r[2],category:r[3],action:r[4],label:r[5],
+        page:r[6],ref:r[7],ua:r[8],lang:r[9],w:r[10],h:r[11]
+      });
+    }
+    return jsonResponse({events:events});
+  }
+  return jsonResponse({ok:false,err:'unknown action'});
+}
+
+function jsonResponse(obj){
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function initSheet(ss){
+  var sh=ss.insertSheet(SHEET_NAME);
+  sh.appendRow(['timestamp','session_id','visitor_id','category','action','label','page','referrer','user_agent','language','screen_w','screen_h']);
+  sh.setFrozenRows(1);
+  return sh;
+}

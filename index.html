@@ -1644,7 +1644,38 @@ window.addEventListener('scroll',()=>{
    COMPREHENSIVE EVENT TRACKING — ALL PLATFORMS
    GA4 + Meta Pixel + TikTok + Snapchat
    ============================================================ */
+/* ===== CUSTOM DASHBOARD BACKEND ===== */
+var DASHBOARD_ENDPOINT='https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec';
+var SESSION_ID=(function(){
+  var k='po_sid',s=sessionStorage.getItem(k);
+  if(!s){s=Date.now().toString(36)+Math.random().toString(36).slice(2,8);sessionStorage.setItem(k,s)}
+  return s;
+})();
+var VISITOR_ID=(function(){
+  var k='po_vid',v=localStorage.getItem(k);
+  if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem(k,v)}
+  return v;
+})();
+function sendToBackend(category,action,label){
+  if(!DASHBOARD_ENDPOINT||DASHBOARD_ENDPOINT.indexOf('REPLACE_WITH')>-1)return;
+  try{
+    var payload={
+      ts:new Date().toISOString(),
+      sid:SESSION_ID,vid:VISITOR_ID,
+      category:category,action:action,label:label||'',
+      page:location.pathname,ref:document.referrer||'direct',
+      ua:navigator.userAgent,lang:navigator.language,
+      w:screen.width,h:screen.height
+    };
+    var blob=new Blob([JSON.stringify(payload)],{type:'text/plain;charset=utf-8'});
+    navigator.sendBeacon?navigator.sendBeacon(DASHBOARD_ENDPOINT,blob):
+      fetch(DASHBOARD_ENDPOINT,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)});
+  }catch(e){}
+}
+
 function trackEvent(category, action, label) {
+  /* Custom Dashboard */
+  sendToBackend(category,action,label);
   /* GA4 */
   if(typeof gtag==='function') gtag('event', action, {event_category:category, event_label:label});
   /* Meta */
@@ -1669,6 +1700,9 @@ function trackEvent(category, action, label) {
     else snaptr('track','CUSTOM_EVENT_1');
   }
 }
+
+/* --- Initial Page View to Dashboard --- */
+trackEvent('page','pageview',document.title);
 
 /* --- WhatsApp Clicks --- */
 document.querySelectorAll('a[href*="wa.me"]').forEach(function(el){

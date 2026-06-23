@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>لوحة تحكم الزيت النقي — Analytics Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cairo',sans-serif;background:#0F172A;color:#E2E8F0;line-height:1.6;direction:rtl;min-height:100vh}
+.gate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.gate-card{background:#1E293B;border:1px solid #334155;border-radius:20px;padding:48px 36px;max-width:420px;width:100%;box-shadow:0 25px 50px -12px rgba(0,0,0,.5)}
+.gate-card h1{font-size:28px;color:#F5C518;margin-bottom:8px;text-align:center}
+.gate-card p{color:#94A3B8;text-align:center;margin-bottom:28px;font-size:14px}
+.gate input{width:100%;padding:14px 18px;background:#0F172A;border:1px solid #334155;border-radius:12px;color:#fff;font-family:inherit;font-size:16px;margin-bottom:14px;direction:ltr;text-align:center;letter-spacing:2px}
+.gate input:focus{outline:none;border-color:#F5C518}
+.gate button{width:100%;padding:14px;background:#F5C518;color:#0F172A;border:none;border-radius:12px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s}
+.gate button:hover{transform:translateY(-2px)}
+.gate-err{color:#EF4444;font-size:13px;text-align:center;margin-top:12px;min-height:18px}
+
+.dash{display:none;max-width:1400px;margin:0 auto;padding:24px}
+.dash.active{display:block}
+header.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #334155}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-mark{width:46px;height:46px;background:linear-gradient(135deg,#F5C518,#D4A017);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0F172A;font-size:20px}
+.brand h1{font-size:22px;color:#fff}
+.brand small{color:#94A3B8;font-size:12px;display:block}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tools select,.tools button{padding:10px 16px;background:#1E293B;border:1px solid #334155;border-radius:10px;color:#E2E8F0;font-family:inherit;font-size:13px;cursor:pointer}
+.tools button.refresh{background:#F5C518;color:#0F172A;font-weight:700;border-color:#F5C518}
+.tools button.refresh:hover{background:#D4A017}
+.tools .live{display:inline-flex;align-items:center;gap:6px;color:#10B981;font-size:13px;font-weight:600}
+.tools .live::before{content:'';width:8px;height:8px;background:#10B981;border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:#1E293B;border:1px solid #334155;border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--c,#F5C518)}
+.kpi .lbl{color:#94A3B8;font-size:12px;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.kpi .val{font-size:30px;font-weight:800;color:#fff}
+.kpi .sub{color:#64748B;font-size:11px;margin-top:4px}
+.kpi.green{--c:#10B981}.kpi.blue{--c:#3B82F6}.kpi.purple{--c:#A855F7}.kpi.pink{--c:#EC4899}.kpi.orange{--c:#F97316}.kpi.gold{--c:#F5C518}
+
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+@media(max-width:900px){.grid,.grid-2,.grid-3{grid-template-columns:1fr}}
+
+.card{background:#1E293B;border:1px solid #334155;border-radius:14px;padding:20px}
+.card h2{font-size:15px;color:#F5C518;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.card h2 span.count{color:#94A3B8;font-size:12px;font-weight:400}
+.chart-wrap{position:relative;height:280px}
+.chart-wrap.small{height:220px}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+table th{text-align:right;padding:10px 8px;background:#0F172A;color:#94A3B8;font-weight:600;border-bottom:1px solid #334155;font-size:12px}
+table td{padding:10px 8px;border-bottom:1px solid #1E293B;color:#CBD5E1}
+table tr:hover td{background:#0F172A}
+.bar-cell{position:relative;background:linear-gradient(to left,#3B82F633 var(--pct,0%),transparent 0)}
+.tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600}
+.tag.contact{background:#10B98122;color:#10B981}
+.tag.branches{background:#3B82F622;color:#3B82F6}
+.tag.shop{background:#A855F722;color:#A855F7}
+.tag.cta{background:#F5C51822;color:#F5C518}
+.tag.engagement{background:#EC489922;color:#EC4899}
+.tag.page{background:#64748B22;color:#94A3B8}
+
+.scroll-tbl{max-height:340px;overflow-y:auto}
+.scroll-tbl::-webkit-scrollbar{width:6px}
+.scroll-tbl::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+
+.empty{text-align:center;padding:40px 20px;color:#64748B}
+.empty svg{width:48px;height:48px;opacity:.3;margin-bottom:12px}
+
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;color:#94A3B8;font-size:14px}
+.loading::before{content:'';width:24px;height:24px;border:3px solid #334155;border-top-color:#F5C518;border-radius:50%;margin-left:10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-size:12px;border-top:1px solid #334155}
+.setup-banner{background:linear-gradient(135deg,#F5C51822,#F5C51811);border:1px solid #F5C51844;border-radius:14px;padding:20px;margin-bottom:20px;color:#FCD34D;font-size:14px}
+.setup-banner b{color:#F5C518}
+.setup-banner code{background:#0F172A;padding:3px 8px;border-radius:6px;color:#F5C518;font-size:12px;display:inline-block;margin:2px}
+</style>
+</head>
+<body>
+
+<!-- ===== PASSWORD GATE ===== -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h1>🔐 لوحة التحكم</h1>
+    <p>أدخل كلمة المرور للدخول إلى تحليلات الزيت النقي</p>
+    <form id="gateForm">
+      <input type="password" id="pwd" placeholder="••••••••" autocomplete="off" autofocus>
+      <button type="submit">دخول</button>
+      <div class="gate-err" id="gateErr"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<main class="dash" id="dash">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">PO</div>
+      <div>
+        <h1>الزيت النقي — لوحة التحليلات</h1>
+        <small>Real-time analytics dashboard</small>
+      </div>
+    </div>
+    <div class="tools">
+      <span class="live">Live</span>
+      <select id="rangeSel">
+        <option value="1">آخر 24 ساعة</option>
+        <option value="7" selected>آخر 7 أيام</option>
+        <option value="30">آخر 30 يوم</option>
+        <option value="90">آخر 90 يوم</option>
+        <option value="all">كل الفترة</option>
+      </select>
+      <button class="refresh" id="refreshBtn">🔄 تحديث</button>
+      <button id="logoutBtn">خروج</button>
+    </div>
+  </header>
+
+  <div id="setupBanner" class="setup-banner" style="display:none">
+    <b>⚙️ الـ Dashboard لم تتصل بالـ Backend بعد.</b><br>
+    اتبع خطوات الإعداد فى الملف ثم ضع رابط الـ Apps Script هنا. الـ Endpoint الحالى: <code id="epDisplay"></code>
+  </div>
+
+  <div id="loader" class="loading">جاري تحميل البيانات...</div>
+
+  <div id="content" style="display:none">
+    <!-- KPIs -->
+    <div class="kpis" id="kpis"></div>
+
+    <!-- Visitors Chart + Top Pages -->
+    <div class="grid">
+      <div class="card">
+        <h2>📈 الزيارات على مدار الفترة <span class="count" id="visChartCount"></span></h2>
+        <div class="chart-wrap"><canvas id="visitsChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>🎯 تقسيم الأحداث</h2>
+        <div class="chart-wrap"><canvas id="categoriesChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- WhatsApp / Phone / Branches breakdown -->
+    <div class="grid-3">
+      <div class="card">
+        <h2>💬 WhatsApp <span class="count" id="waCount"></span></h2>
+        <div class="scroll-tbl">
+          <table><thead><tr><th>الموقع فى الصفحة</th><th>عدد</th></tr></thead><tbody id="waTbl"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📞 المكالمات <span class="count" id="phCount"></span></h2>
+        <div class="scroll-tbl">
+          <table><thead><tr><th>الرقم</th><th>عدد</th></tr></thead><tbody id="phTbl"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📍 الفروع <span class="count" id="brCount"></span></h2>
+        <div class="scroll-tbl">
+          <table><thead><tr><th>الفرع</th><th>تفاعلات</th></tr></thead><tbody id="brTbl"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branch action types + Scroll + Sections -->
+    <div class="grid-3">
+      <div class="card">
+        <h2>🗺️ أنواع التفاعل مع الفروع</h2>
+        <div class="chart-wrap small"><canvas id="branchTypeChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>📜 عمق التمرير (Scroll Depth)</h2>
+        <div class="chart-wrap small"><canvas id="scrollChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>👁️ مشاهدات الأقسام</h2>
+        <div class="chart-wrap small"><canvas id="sectionsChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Shop / CTA / FAQ -->
+    <div class="grid-3">
+      <div class="card">
+        <h2>🛒 الضغط على المنتجات <span class="count" id="shopCount"></span></h2>
+        <div class="scroll-tbl">
+          <table><thead><tr><th>المنتج / اللينك</th><th>عدد</th></tr></thead><tbody id="shopTbl"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🎯 الضغط على أزرار CTA <span class="count" id="ctaCount"></span></h2>
+        <div class="scroll-tbl">
+          <table><thead><tr><th>الزرار</th><th>عدد</th></tr></thead><tbody id="ctaTbl"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>❓ أسئلة FAQ <span class="count" id="faqCount"></span></h2>
+        <div class="scroll-tbl">
+          <table><thead><tr><th>السؤال</th><th>فتحات</th></tr></thead><tbody id="faqTbl"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sources + Time on page + Recent -->
+    <div class="grid-2">
+      <div class="card">
+        <h2>🌐 مصادر الزيارات (Referrers)</h2>
+        <div class="scroll-tbl">
+          <table><thead><tr><th>المصدر</th><th>جلسات</th></tr></thead><tbody id="refTbl"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>⏱️ مدة البقاء فى الصفحة</h2>
+        <div class="chart-wrap small"><canvas id="timeChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Recent activity -->
+    <div class="card">
+      <h2>🔔 آخر الأحداث (Live Feed) <span class="count" id="recentCount"></span></h2>
+      <div class="scroll-tbl" style="max-height:400px">
+        <table>
+          <thead><tr><th style="width:140px">الوقت</th><th>نوع</th><th>الحدث</th><th>التفاصيل</th></tr></thead>
+          <tbody id="recentTbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    لوحة تحكم خاصة بـ <b style="color:#F5C518">الزيت النقي</b> • محدثة كل 30 ثانية • Made with ❤️
+  </footer>
+</main>
+
+<script>
+/* ============ CONFIG ============ */
+var DASHBOARD_ENDPOINT='https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec';
+var PASSWORD_HASH='8f4e6a8e2c1d7b3f9a5e0d6c4b2a1e9f3d7c5b8a6e2f4d1c9b7e3a5d8f0c4b6e'; /* default: pureoil2026 */
+var REFRESH_MS=30000;
+
+/* ============ PASSWORD GATE ============ */
+async function sha256(s){
+  var buf=new TextEncoder().encode(s);
+  var hash=await crypto.subtle.digest('SHA-256',buf);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function checkPwd(p){
+  var h=await sha256(p);
+  return h===PASSWORD_HASH;
+}
+function enterDash(){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('dash').classList.add('active');
+  sessionStorage.setItem('po_dash_auth','1');
+  loadData();
+  setInterval(loadData,REFRESH_MS);
+}
+document.getElementById('gateForm').addEventListener('submit',async function(e){
+  e.preventDefault();
+  var pwd=document.getElementById('pwd').value;
+  /* Default acceptance: pureoil2026 OR any string matching the hash above */
+  if(pwd==='pureoil2026' || await checkPwd(pwd)){enterDash()}
+  else{
+    document.getElementById('gateErr').textContent='كلمة المرور غير صحيحة';
+    document.getElementById('pwd').value='';
+  }
+});
+if(sessionStorage.getItem('po_dash_auth')==='1')enterDash();
+
+document.getElementById('logoutBtn').addEventListener('click',function(){
+  sessionStorage.removeItem('po_dash_auth');location.reload();
+});
+
+/* ============ DATA LOADING ============ */
+var ALL_EVENTS=[];
+var charts={};
+
+async function loadData(){
+  if(DASHBOARD_ENDPOINT.indexOf('REPLACE_WITH')>-1){
+    showSetupBanner();
+    document.getElementById('loader').style.display='none';
+    document.getElementById('content').style.display='block';
+    ALL_EVENTS=generateDemoData();
+    render();
+    return;
+  }
+  try{
+    var res=await fetch(DASHBOARD_ENDPOINT+'?action=list&t='+Date.now());
+    var data=await res.json();
+    ALL_EVENTS=data.events||[];
+    document.getElementById('loader').style.display='none';
+    document.getElementById('content').style.display='block';
+    render();
+  }catch(e){
+    showSetupBanner();
+    document.getElementById('loader').style.display='none';
+    document.getElementById('content').style.display='block';
+    ALL_EVENTS=generateDemoData();
+    render();
+  }
+}
+
+function showSetupBanner(){
+  var b=document.getElementById('setupBanner');
+  b.style.display='block';
+  document.getElementById('epDisplay').textContent=DASHBOARD_ENDPOINT;
+}
+
+document.getElementById('refreshBtn').addEventListener('click',loadData);
+document.getElementById('rangeSel').addEventListener('change',render);
+
+/* ============ DEMO DATA (when backend not connected) ============ */
+function generateDemoData(){
+  var cats=['contact','branches','shop','cta','engagement','page'];
+  var sample=[
+    ['contact','whatsapp_click','whatsapp_hero'],
+    ['contact','whatsapp_click','whatsapp_branches'],
+    ['contact','whatsapp_click','whatsapp_footer'],
+    ['contact','phone_click','call_0501795763_branches'],
+    ['contact','phone_click','call_0501795763_header'],
+    ['branches','branch_maps_click','فرع الرياض - حي النخيل'],
+    ['branches','branch_whatsapp_click','فرع الرياض - حي النخيل'],
+    ['branches','branch_phone_click','فرع جدة - حي الروضة'],
+    ['branches','branch_maps_click','فرع جدة - حي الروضة'],
+    ['branches','branch_maps_click','فرع الدمام'],
+    ['shop','shop_click','تسوق منتجات PURE ZOIL'],
+    ['shop','shop_click','تسوق منتجات KRAFTOL'],
+    ['cta','cta_click','احجز الآن'],
+    ['cta','cta_click','اطلب امتياز'],
+    ['engagement','scroll_depth','25%'],
+    ['engagement','scroll_depth','50%'],
+    ['engagement','scroll_depth','75%'],
+    ['engagement','scroll_depth','100%'],
+    ['engagement','section_view','hero'],
+    ['engagement','section_view','products'],
+    ['engagement','section_view','branches'],
+    ['engagement','section_view','faq'],
+    ['engagement','time_on_page','30s'],
+    ['engagement','time_on_page','60s'],
+    ['engagement','time_on_page','120s'],
+    ['engagement','faq_click','كم فرع لديكم؟'],
+    ['engagement','faq_click','ما أنواع الزيوت المتاحة؟'],
+    ['page','pageview','الزيت النقي']
+  ];
+  var refs=['direct','google.com','facebook.com','instagram.com','tiktok.com','snapchat.com'];
+  var events=[],now=Date.now();
+  for(var i=0;i<800;i++){
+    var ev=sample[Math.floor(Math.random()*sample.length)];
+    var daysAgo=Math.random()*30;
+    events.push({
+      ts:new Date(now-daysAgo*86400000).toISOString(),
+      sid:'demo_s'+Math.floor(Math.random()*200),
+      vid:'demo_v'+Math.floor(Math.random()*150),
+      category:ev[0],action:ev[1],label:ev[2],
+      ref:refs[Math.floor(Math.random()*refs.length)],
+      page:'/'
+    });
+  }
+  return events;
+}
+
+/* ============ FILTERING ============ */
+function getFiltered(){
+  var days=document.getElementById('rangeSel').value;
+  if(days==='all')return ALL_EVENTS;
+  var cutoff=Date.now()-parseInt(days)*86400000;
+  return ALL_EVENTS.filter(function(e){return new Date(e.ts).getTime()>=cutoff});
+}
+
+/* ============ RENDER ============ */
+function render(){
+  var events=getFiltered();
+  renderKPIs(events);
+  renderVisitsChart(events);
+  renderCategoriesChart(events);
+  renderWhatsApp(events);
+  renderPhone(events);
+  renderBranches(events);
+  renderBranchTypes(events);
+  renderScroll(events);
+  renderSections(events);
+  renderShop(events);
+  renderCTA(events);
+  renderFAQ(events);
+  renderReferrers(events);
+  renderTimeOnPage(events);
+  renderRecent(events);
+}
+
+function uniq(arr){var s={};arr.forEach(function(x){s[x]=1});return Object.keys(s)}
+
+function renderKPIs(events){
+  var pageviews=events.filter(function(e){return e.action==='pageview'}).length;
+  var visitors=uniq(events.map(function(e){return e.vid})).length;
+  var sessions=uniq(events.map(function(e){return e.sid})).length;
+  var wa=events.filter(function(e){return e.action==='whatsapp_click'}).length;
+  var phone=events.filter(function(e){return e.action==='phone_click'}).length;
+  var branches=events.filter(function(e){return e.category==='branches'}).length;
+  var shop=events.filter(function(e){return e.action==='shop_click'}).length;
+  var ctaClicks=events.filter(function(e){return e.category==='cta'}).length;
+  var totalEvents=events.length;
+  var convRate=visitors>0?((wa+phone)/visitors*100).toFixed(1):0;
+
+  var kpis=[
+    {lbl:'إجمالى الزيارات',val:pageviews,c:'gold',sub:'Page Views'},
+    {lbl:'زوار فريدون',val:visitors,c:'blue',sub:'Unique Visitors'},
+    {lbl:'الجلسات',val:sessions,c:'purple',sub:'Sessions'},
+    {lbl:'ضغط واتساب',val:wa,c:'green',sub:'WhatsApp Clicks'},
+    {lbl:'مكالمات',val:phone,c:'orange',sub:'Phone Calls'},
+    {lbl:'تفاعل فروع',val:branches,c:'pink',sub:'Branch Interactions'},
+    {lbl:'ضغط متجر',val:shop,c:'purple',sub:'Shop Clicks'},
+    {lbl:'CTA Clicks',val:ctaClicks,c:'gold',sub:'Call-to-Action'},
+    {lbl:'إجمالى الأحداث',val:totalEvents,c:'blue',sub:'All Events'},
+    {lbl:'معدل التحويل',val:convRate+'%',c:'green',sub:'Visitors → Contact'}
+  ];
+  document.getElementById('kpis').innerHTML=kpis.map(function(k){
+    return '<div class="kpi '+k.c+'"><div class="lbl">'+k.lbl+'</div><div class="val">'+k.val.toLocaleString('ar-EG')+'</div><div class="sub">'+k.sub+'</div></div>';
+  }).join('');
+}
+
+function renderVisitsChart(events){
+  var days=document.getElementById('rangeSel').value;
+  var numDays=days==='all'?30:Math.min(parseInt(days),60);
+  var now=new Date();now.setHours(0,0,0,0);
+  var labels=[],dataVisits=[],dataVisitors=[];
+  for(var i=numDays-1;i>=0;i--){
+    var d=new Date(now);d.setDate(d.getDate()-i);
+    var next=new Date(d);next.setDate(next.getDate()+1);
+    var dayEvents=events.filter(function(e){var t=new Date(e.ts);return t>=d&&t<next});
+    labels.push(d.toLocaleDateString('ar-EG',{month:'short',day:'numeric'}));
+    dataVisits.push(dayEvents.filter(function(e){return e.action==='pageview'}).length);
+    dataVisitors.push(uniq(dayEvents.map(function(e){return e.vid})).length);
+  }
+  if(charts.visits)charts.visits.destroy();
+  charts.visits=new Chart(document.getElementById('visitsChart'),{
+    type:'line',
+    data:{labels:labels,datasets:[
+      {label:'مشاهدات',data:dataVisits,borderColor:'#F5C518',backgroundColor:'#F5C51822',tension:.3,fill:true,borderWidth:2},
+      {label:'زوار فريدون',data:dataVisitors,borderColor:'#3B82F6',backgroundColor:'#3B82F622',tension:.3,fill:true,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94A3B8'}}},scales:{x:{ticks:{color:'#94A3B8'},grid:{color:'#33415544'}},y:{ticks:{color:'#94A3B8'},grid:{color:'#33415544'}}}}
+  });
+  document.getElementById('visChartCount').textContent=dataVisits.reduce(function(a,b){return a+b},0)+' مشاهدة';
+}
+
+function renderCategoriesChart(events){
+  var cats={};
+  events.forEach(function(e){cats[e.category]=(cats[e.category]||0)+1});
+  var labels=Object.keys(cats),data=labels.map(function(k){return cats[k]});
+  var colors=['#10B981','#3B82F6','#A855F7','#F5C518','#EC4899','#94A3B8'];
+  if(charts.cats)charts.cats.destroy();
+  charts.cats=new Chart(document.getElementById('categoriesChart'),{
+    type:'doughnut',
+    data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderColor:'#0F172A',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94A3B8',padding:10,font:{size:11}}}}}
+  });
+}
+
+function fillTable(tbodyId,countId,events,filterFn,labelFn){
+  var filtered=events.filter(filterFn);
+  document.getElementById(countId).textContent=filtered.length+' حدث';
+  var groups={};
+  filtered.forEach(function(e){var k=labelFn(e);groups[k]=(groups[k]||0)+1});
+  var rows=Object.keys(groups).map(function(k){return[k,groups[k]]}).sort(function(a,b){return b[1]-a[1]});
+  var max=rows.length>0?rows[0][1]:1;
+  if(rows.length===0){
+    document.getElementById(tbodyId).innerHTML='<tr><td colspan="2" style="text-align:center;color:#64748B;padding:20px">لا توجد بيانات بعد</td></tr>';
+    return;
+  }
+  document.getElementById(tbodyId).innerHTML=rows.slice(0,20).map(function(r){
+    var pct=(r[1]/max*100).toFixed(0);
+    return '<tr><td class="bar-cell" style="--pct:'+pct+'%">'+r[0]+'</td><td style="text-align:left;font-weight:700;color:#F5C518">'+r[1]+'</td></tr>';
+  }).join('');
+}
+
+function renderWhatsApp(events){
+  fillTable('waTbl','waCount',events,function(e){return e.action==='whatsapp_click'},function(e){return (e.label||'').replace('whatsapp_','')||'غير محدد'});
+}
+function renderPhone(events){
+  fillTable('phTbl','phCount',events,function(e){return e.action==='phone_click'},function(e){
+    var m=(e.label||'').match(/call_(\d+)/);return m?m[1]:'غير محدد';
+  });
+}
+function renderBranches(events){
+  fillTable('brTbl','brCount',events,function(e){return e.category==='branches'},function(e){return e.label||'غير محدد'});
+}
+function renderShop(events){
+  fillTable('shopTbl','shopCount',events,function(e){return e.action==='shop_click'},function(e){return e.label||'غير محدد'});
+}
+function renderCTA(events){
+  fillTable('ctaTbl','ctaCount',events,function(e){return e.category==='cta'},function(e){return e.label||'غير محدد'});
+}
+function renderFAQ(events){
+  fillTable('faqTbl','faqCount',events,function(e){return e.action==='faq_click'},function(e){return e.label||'غير محدد'});
+}
+
+function renderBranchTypes(events){
+  var br=events.filter(function(e){return e.category==='branches'});
+  var types={maps:0,whatsapp:0,phone:0};
+  br.forEach(function(e){
+    if(e.action.indexOf('maps')>-1)types.maps++;
+    else if(e.action.indexOf('whatsapp')>-1)types.whatsapp++;
+    else if(e.action.indexOf('phone')>-1)types.phone++;
+  });
+  if(charts.bt)charts.bt.destroy();
+  charts.bt=new Chart(document.getElementById('branchTypeChart'),{
+    type:'bar',
+    data:{labels:['خرائط','واتساب','اتصال'],datasets:[{data:[types.maps,types.whatsapp,types.phone],backgroundColor:['#3B82F6','#10B981','#F97316'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94A3B8'},grid:{display:false}},y:{ticks:{color:'#94A3B8'},grid:{color:'#33415544'}}}}
+  });
+}
+
+function renderScroll(events){
+  var depths=['25%','50%','75%','100%'];
+  var counts=depths.map(function(d){return events.filter(function(e){return e.action==='scroll_depth'&&e.label===d}).length});
+  if(charts.scroll)charts.scroll.destroy();
+  charts.scroll=new Chart(document.getElementById('scrollChart'),{
+    type:'bar',
+    data:{labels:depths,datasets:[{data:counts,backgroundColor:['#F5C518','#F97316','#EC4899','#A855F7'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94A3B8'},grid:{display:false}},y:{ticks:{color:'#94A3B8'},grid:{color:'#33415544'}}}}
+  });
+}
+
+function renderSections(events){
+  var sv=events.filter(function(e){return e.action==='section_view'});
+  var groups={};
+  sv.forEach(function(e){groups[e.label]=(groups[e.label]||0)+1});
+  var sorted=Object.keys(groups).sort(function(a,b){return groups[b]-groups[a]}).slice(0,8);
+  if(charts.sec)charts.sec.destroy();
+  charts.sec=new Chart(document.getElementById('sectionsChart'),{
+    type:'bar',
+    data:{labels:sorted,datasets:[{data:sorted.map(function(s){return groups[s]}),backgroundColor:'#A855F7',borderRadius:6}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94A3B8'},grid:{color:'#33415544'}},y:{ticks:{color:'#94A3B8'},grid:{display:false}}}}
+  });
+}
+
+function renderReferrers(events){
+  var pv=events.filter(function(e){return e.action==='pageview'});
+  var refs={};
+  var bySession={};
+  pv.forEach(function(e){
+    if(bySession[e.sid])return;
+    bySession[e.sid]=1;
+    var r=e.ref||'direct';
+    try{if(r.indexOf('http')===0)r=new URL(r).hostname.replace('www.','')}catch(_){}
+    refs[r]=(refs[r]||0)+1;
+  });
+  var rows=Object.keys(refs).map(function(k){return[k,refs[k]]}).sort(function(a,b){return b[1]-a[1]});
+  if(rows.length===0){
+    document.getElementById('refTbl').innerHTML='<tr><td colspan="2" style="text-align:center;color:#64748B;padding:20px">لا توجد بيانات بعد</td></tr>';
+    return;
+  }
+  var max=rows[0][1];
+  document.getElementById('refTbl').innerHTML=rows.slice(0,15).map(function(r){
+    var pct=(r[1]/max*100).toFixed(0);
+    return '<tr><td class="bar-cell" style="--pct:'+pct+'%">'+r[0]+'</td><td style="text-align:left;font-weight:700;color:#F5C518">'+r[1]+'</td></tr>';
+  }).join('');
+}
+
+function renderTimeOnPage(events){
+  var buckets=['30s','60s','120s','300s'];
+  var counts=buckets.map(function(b){return events.filter(function(e){return e.action==='time_on_page'&&e.label===b}).length});
+  if(charts.tm)charts.tm.destroy();
+  charts.tm=new Chart(document.getElementById('timeChart'),{
+    type:'line',
+    data:{labels:buckets,datasets:[{data:counts,borderColor:'#EC4899',backgroundColor:'#EC489922',fill:true,tension:.3,pointBackgroundColor:'#EC4899',pointRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94A3B8'},grid:{display:false}},y:{ticks:{color:'#94A3B8'},grid:{color:'#33415544'}}}}
+  });
+}
+
+function renderRecent(events){
+  var sorted=events.slice().sort(function(a,b){return new Date(b.ts)-new Date(a.ts)}).slice(0,80);
+  document.getElementById('recentCount').textContent=events.length+' حدث';
+  if(sorted.length===0){
+    document.getElementById('recentTbl').innerHTML='<tr><td colspan="4" style="text-align:center;color:#64748B;padding:20px">لا توجد بيانات بعد</td></tr>';
+    return;
+  }
+  document.getElementById('recentTbl').innerHTML=sorted.map(function(e){
+    var t=new Date(e.ts);
+    var tStr=t.toLocaleDateString('ar-EG',{month:'short',day:'numeric'})+' '+t.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+    return '<tr><td style="color:#94A3B8;font-size:12px">'+tStr+'</td><td><span class="tag '+e.category+'">'+e.category+'</span></td><td style="color:#fff">'+e.action+'</td><td style="color:#94A3B8">'+(e.label||'-')+'</td></tr>';
+  }).join('');
+}
+</script>
+</body>
+</html>
