@@ -10,6 +10,42 @@
 <meta property="og:description" content="+25 فرع في المملكة. زيوت أمريكية أصلية ومنظفات ألمانية. احجز الآن!">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ar_SA">
+<!-- ===== GOOGLE ANALYTICS 4 ===== -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MJYQ7GQCDG"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}
+gtag('js',new Date());gtag('config','G-MJYQ7GQCDG');
+</script>
+
+<!-- ===== META PIXEL ===== -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','303740298970082');fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=303740298970082&ev=PageView&noscript=1"/></noscript>
+
+<!-- ===== TIKTOK PIXEL ===== -->
+<script>
+!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=r+"?sdkid="+e+"&lib="+t;var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s)};
+ttq.load('CK4KQGRC77UA49G1HJ8G');ttq.page();
+}(window,document,'ttq');
+</script>
+
+<!-- ===== SNAPCHAT PIXEL ===== -->
+<script>
+(function(e,t,n){if(e.snaptr)return;var a=e.snaptr=function(){a.handleRequest?a.handleRequest.apply(a,arguments):a.queue.push(arguments)};a.queue=[];var s='script';var r=t.createElement(s);r.async=!0;r.src=n;var u=t.getElementsByTagName(s)[0];u.parentNode.insertBefore(r,u)})(window,document,'https://sc-static.net/scevent.min.js');
+snaptr('init','31afde77-e6c7-47c9-93dc-ce87016ff219',{});snaptr('track','PAGE_VIEW');
+</script>
+
+<!-- ===== MICROSOFT CLARITY ===== -->
+<script>
+(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","j0500wkwtf");
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -1603,6 +1639,175 @@ const floatingWa=document.getElementById('floatingWa');
 window.addEventListener('scroll',()=>{
   floatingWa.classList.toggle('visible',window.scrollY>200);
 },{passive:true});
+
+/* ============================================================
+   COMPREHENSIVE EVENT TRACKING — ALL PLATFORMS
+   GA4 + Meta Pixel + TikTok + Snapchat
+   ============================================================ */
+function trackEvent(category, action, label) {
+  /* GA4 */
+  if(typeof gtag==='function') gtag('event', action, {event_category:category, event_label:label});
+  /* Meta */
+  if(typeof fbq==='function') {
+    if(action==='whatsapp_click') fbq('track','Contact',{content_name:label});
+    else if(action==='phone_click') fbq('track','Contact',{content_name:label});
+    else if(action==='franchise_submit') fbq('track','Lead',{content_name:'Franchise Application'});
+    else if(action==='shop_click') fbq('track','ViewContent',{content_name:label});
+    else fbq('trackCustom',action,{category:category,label:label});
+  }
+  /* TikTok */
+  if(typeof ttq!=='undefined') {
+    if(action==='whatsapp_click'||action==='phone_click') ttq.track('Contact',{content_name:label});
+    else if(action==='franchise_submit') ttq.track('SubmitForm',{content_name:'Franchise'});
+    else if(action==='shop_click') ttq.track('ViewContent',{content_name:label});
+    else ttq.track('ClickButton',{content_name:label});
+  }
+  /* Snapchat */
+  if(typeof snaptr==='function') {
+    if(action==='franchise_submit') snaptr('track','SIGN_UP');
+    else if(action==='shop_click') snaptr('track','VIEW_CONTENT');
+    else snaptr('track','CUSTOM_EVENT_1');
+  }
+}
+
+/* --- WhatsApp Clicks --- */
+document.querySelectorAll('a[href*="wa.me"]').forEach(function(el){
+  el.addEventListener('click',function(){
+    var loc=el.closest('section');
+    var sectionId=loc?loc.id:'unknown';
+    trackEvent('contact','whatsapp_click','whatsapp_'+sectionId);
+  });
+});
+
+/* --- Phone Call Clicks --- */
+document.querySelectorAll('a[href^="tel:"]').forEach(function(el){
+  el.addEventListener('click',function(){
+    var phone=el.getAttribute('href').replace('tel:','');
+    var loc=el.closest('section');
+    var sectionId=loc?loc.id:'header';
+    trackEvent('contact','phone_click','call_'+phone+'_'+sectionId);
+  });
+});
+
+/* --- Branch Card Clicks (Maps + WhatsApp + Phone) --- */
+document.querySelectorAll('.branch-card a').forEach(function(el){
+  el.addEventListener('click',function(){
+    var branch=el.closest('.branch-card');
+    var branchName=branch?branch.querySelector('h3').textContent:'unknown';
+    var type=el.href.includes('maps')?'maps':el.href.includes('wa.me')?'whatsapp':'phone';
+    trackEvent('branches','branch_'+type+'_click',branchName);
+  });
+});
+
+/* --- Shop / Product Link Clicks --- */
+document.querySelectorAll('a[href*="pureoil.sa"]').forEach(function(el){
+  if(el.href.includes('salla.sa')||el.href.includes('pureoil.sa/')) {
+    el.addEventListener('click',function(){
+      var text=el.textContent.trim().substring(0,50);
+      trackEvent('shop','shop_click',text);
+    });
+  }
+});
+
+/* --- CTA Button Clicks --- */
+document.querySelectorAll('.btn').forEach(function(el){
+  el.addEventListener('click',function(){
+    var text=el.textContent.trim().substring(0,50);
+    var loc=el.closest('section');
+    var sectionId=loc?loc.id:'header';
+    trackEvent('cta','button_click',text+'_'+sectionId);
+  });
+});
+
+/* --- Product Tab Clicks --- */
+document.querySelectorAll('.product-tab').forEach(function(el){
+  el.addEventListener('click',function(){
+    trackEvent('products','tab_click',el.textContent.trim());
+  });
+});
+
+/* --- Branch Tab Clicks --- */
+document.querySelectorAll('.branch-tab').forEach(function(el){
+  el.addEventListener('click',function(){
+    trackEvent('branches','region_tab_click',el.textContent.trim());
+  });
+});
+
+/* --- FAQ Clicks --- */
+document.querySelectorAll('.faq-question').forEach(function(el){
+  el.addEventListener('click',function(){
+    var q=el.querySelector('span').textContent.trim();
+    trackEvent('faq','faq_click',q);
+  });
+});
+
+/* --- Social Media Clicks --- */
+document.querySelectorAll('.footer-social a').forEach(function(el){
+  el.addEventListener('click',function(){
+    trackEvent('social','social_click',el.getAttribute('aria-label'));
+  });
+});
+
+/* --- Certificate View Clicks --- */
+document.querySelectorAll('.cert-link').forEach(function(el){
+  el.addEventListener('click',function(){
+    var cert=el.closest('.cert-card').querySelector('h3').textContent;
+    trackEvent('certificates','cert_view',cert);
+  });
+});
+
+/* --- Royal Purple CTA Clicks --- */
+document.querySelectorAll('#royal-purple .btn').forEach(function(el){
+  el.addEventListener('click',function(){
+    trackEvent('royal_purple','royal_purple_click',el.textContent.trim().substring(0,50));
+  });
+});
+
+/* --- Franchise Form Submit --- */
+var franchiseForm=document.getElementById('franchiseForm');
+if(franchiseForm){
+  franchiseForm.addEventListener('submit',function(){
+    trackEvent('franchise','franchise_submit','franchise_form_submitted');
+  });
+}
+
+/* --- Scroll Depth Tracking --- */
+var scrollMilestones={25:false,50:false,75:false,100:false};
+window.addEventListener('scroll',function(){
+  var scrollPct=Math.round((window.scrollY/(document.body.scrollHeight-window.innerHeight))*100);
+  [25,50,75,100].forEach(function(m){
+    if(scrollPct>=m&&!scrollMilestones[m]){
+      scrollMilestones[m]=true;
+      trackEvent('engagement','scroll_depth','scrolled_'+m+'_percent');
+    }
+  });
+},{passive:true});
+
+/* --- Section View Tracking (IntersectionObserver) --- */
+var sectionIds=['hero','about','services','products','kraftool','royal-purple','certificates','testimonials','branches','franchise','faq','footer'];
+if('IntersectionObserver' in window){
+  var sectionObs=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        trackEvent('navigation','section_view',entry.target.id);
+        sectionObs.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.3});
+  sectionIds.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) sectionObs.observe(el);
+  });
+}
+
+/* --- Time on Page Tracking --- */
+var timeIntervals=[30,60,120,300];
+timeIntervals.forEach(function(sec){
+  setTimeout(function(){
+    trackEvent('engagement','time_on_page','stayed_'+sec+'_seconds');
+  },sec*1000);
+});
+
 </script>
 </body>
 </html>
