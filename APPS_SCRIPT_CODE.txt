@@ -8,10 +8,8 @@ const SHEET_NAME='events';
 const FRANCHISE_SHEET='franchise_leads';
 
 /* === EMAIL CONFIG === */
-const NOTIFY_EMAILS=[
-  'mahmoudkhaled0222@gmail.com',
-  'info@pureoil.sa'  /* غيّر للإيميل الرسمى الصحيح لو مختلف */
-];
+/* غيّر السطر ده للإيميل الرسمى الصحيح لو مختلف */
+const NOTIFY_EMAILS=['info@pureoil.sa'];
 
 function doPost(e){
   try{
