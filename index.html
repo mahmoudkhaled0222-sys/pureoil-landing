@@ -1656,6 +1656,43 @@ var VISITOR_ID=(function(){
   if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem(k,v)}
   return v;
 })();
+/* ===== UTM / Source Detection ===== */
+var TRAFFIC_SOURCE=(function(){
+  var k='po_src',saved=sessionStorage.getItem(k);
+  if(saved)return JSON.parse(saved);
+  var params=new URLSearchParams(location.search);
+  var utm_source=params.get('utm_source')||'';
+  var utm_medium=params.get('utm_medium')||'';
+  var utm_campaign=params.get('utm_campaign')||'';
+  var utm_content=params.get('utm_content')||'';
+  var ref=document.referrer||'';
+  var platform='direct';
+  /* UTM has priority */
+  if(utm_source){
+    var s=utm_source.toLowerCase();
+    if(s.indexOf('facebook')>-1||s.indexOf('meta')>-1||s.indexOf('instagram')>-1||s==='ig'||s==='fb')platform='meta';
+    else if(s.indexOf('tiktok')>-1||s==='tt')platform='tiktok';
+    else if(s.indexOf('snap')>-1)platform='snapchat';
+    else if(s.indexOf('google')>-1)platform=utm_medium==='cpc'?'google_ads':'google_organic';
+    else if(s.indexOf('youtube')>-1)platform='youtube';
+    else if(s.indexOf('twitter')>-1||s==='x')platform='twitter';
+    else if(s.indexOf('whatsapp')>-1)platform='whatsapp';
+    else platform=utm_source;
+  }else if(ref){
+    var r=ref.toLowerCase();
+    if(r.indexOf('facebook.com')>-1||r.indexOf('fb.com')>-1||r.indexOf('instagram.com')>-1||r.indexOf('l.facebook')>-1)platform='meta_organic';
+    else if(r.indexOf('tiktok.com')>-1)platform='tiktok_organic';
+    else if(r.indexOf('snapchat.com')>-1)platform='snapchat_organic';
+    else if(r.indexOf('google.')>-1)platform='google_organic';
+    else if(r.indexOf('youtube.com')>-1)platform='youtube';
+    else if(r.indexOf('twitter.com')>-1||r.indexOf('x.com')>-1)platform='twitter';
+    else if(r.indexOf('bing.')>-1)platform='bing';
+    else platform='referral';
+  }
+  var src={platform:platform,utm_source:utm_source,utm_medium:utm_medium,utm_campaign:utm_campaign,utm_content:utm_content,ref:ref};
+  sessionStorage.setItem(k,JSON.stringify(src));
+  return src;
+})();
 function sendToBackend(category,action,label){
   if(!DASHBOARD_ENDPOINT||DASHBOARD_ENDPOINT.indexOf('REPLACE_WITH')>-1)return;
   try{
@@ -1663,7 +1700,12 @@ function sendToBackend(category,action,label){
       ts:new Date().toISOString(),
       sid:SESSION_ID,vid:VISITOR_ID,
       category:category,action:action,label:label||'',
-      page:location.pathname,ref:document.referrer||'direct',
+      page:location.pathname,ref:TRAFFIC_SOURCE.ref||'direct',
+      platform:TRAFFIC_SOURCE.platform,
+      utm_source:TRAFFIC_SOURCE.utm_source,
+      utm_medium:TRAFFIC_SOURCE.utm_medium,
+      utm_campaign:TRAFFIC_SOURCE.utm_campaign,
+      utm_content:TRAFFIC_SOURCE.utm_content,
       ua:navigator.userAgent,lang:navigator.language,
       w:screen.width,h:screen.height
     };

@@ -126,8 +126,16 @@ footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-si
   </header>
 
   <div id="setupBanner" class="setup-banner" style="display:none">
-    <b>⚙️ الـ Dashboard لم تتصل بالـ Backend بعد.</b><br>
-    اتبع خطوات الإعداد فى الملف ثم ضع رابط الـ Apps Script هنا. الـ Endpoint الحالى: <code id="epDisplay"></code>
+    <b style="color:#FCA5A5">⚠️ بيانات تجريبية فقط — لم يتم ربط الـ Backend بعد!</b><br>
+    <span style="color:#FCD34D">الأرقام الى تشوفها دلوقتى وهمية demo لعرض الشكل فقط.</span> لرؤية البيانات الحقيقية:
+    <br><br>1. اعمل Google Sheet → Extensions → Apps Script → الصق كود <code>APPS_SCRIPT_CODE.txt</code> → Deploy as Web App
+    <br>2. ابعتلى الـ URL لتفعيل التتبع الحقيقى
+    <br><br><label style="display:flex;align-items:center;gap:8px;color:#FCD34D;font-size:13px;cursor:pointer">
+      <input type="checkbox" id="demoToggle" style="width:16px;height:16px"> إظهار بيانات تجريبية للعرض التوضيحى (Demo Mode)
+    </label>
+  </div>
+  <div id="liveBanner" style="display:none;background:linear-gradient(135deg,#10B98122,#10B98111);border:1px solid #10B98144;border-radius:14px;padding:16px;margin-bottom:20px;color:#6EE7B7;font-size:14px">
+    <b style="color:#10B981">✅ متصل بالـ Backend — البيانات حقيقية ومباشرة</b>
   </div>
 
   <div id="loader" class="loading">جاري تحميل البيانات...</div>
@@ -148,6 +156,30 @@ footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-si
       </div>
     </div>
 
+    <!-- ⭐ MASTER BRANCHES TABLE — Maps + WhatsApp + Phone PER BRANCH -->
+    <div class="card" style="margin-bottom:16px;border:2px solid #F5C518">
+      <h2>📍 تحليل الفروع التفصيلى — الأهم! <span class="count" id="branchMasterCount"></span></h2>
+      <p style="color:#94A3B8;font-size:12px;margin-bottom:14px">عدد الناس الى ضغطت على (الموقع / واتساب / اتصل) لكل فرع، مرتب من الأعلى</p>
+      <div class="scroll-tbl" style="max-height:500px">
+        <table>
+          <thead><tr>
+            <th>الفرع</th>
+            <th style="text-align:center;color:#3B82F6">🗺️ الموقع</th>
+            <th style="text-align:center;color:#10B981">💬 واتساب</th>
+            <th style="text-align:center;color:#F97316">📞 اتصال</th>
+            <th style="text-align:center;color:#F5C518">الإجمالى</th>
+          </tr></thead>
+          <tbody id="branchMasterTbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Daily branches trend -->
+    <div class="card" style="margin-bottom:16px">
+      <h2>📊 تطور تفاعل الفروع يومياً</h2>
+      <div class="chart-wrap" style="height:260px"><canvas id="branchDailyChart"></canvas></div>
+    </div>
+
     <!-- WhatsApp / Phone / Branches breakdown -->
     <div class="grid-3">
       <div class="card">
@@ -163,7 +195,7 @@ footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-si
         </div>
       </div>
       <div class="card">
-        <h2>📍 الفروع <span class="count" id="brCount"></span></h2>
+        <h2>📍 الفروع (إجمالى التفاعلات) <span class="count" id="brCount"></span></h2>
         <div class="scroll-tbl">
           <table><thead><tr><th>الفرع</th><th>تفاعلات</th></tr></thead><tbody id="brTbl"></tbody></table>
         </div>
@@ -208,10 +240,50 @@ footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-si
       </div>
     </div>
 
+    <!-- ⭐ PLATFORM BREAKDOWN — Traffic Sources (Meta / TikTok / Snap / Google) -->
+    <div class="card" style="margin-bottom:16px;border:2px solid #3B82F6">
+      <h2>🌐 الترافيك جاى من أنهى منصة — مهم جداً! <span class="count" id="platformCount"></span></h2>
+      <p style="color:#94A3B8;font-size:12px;margin-bottom:14px">
+        تقسيم الزوار بالمنصة. لما تطلق إعلان ضيف <code style="background:#0F172A;padding:2px 6px;border-radius:4px;color:#F5C518;font-size:11px">?utm_source=facebook</code> أو <code style="background:#0F172A;padding:2px 6px;border-radius:4px;color:#F5C518;font-size:11px">?utm_source=tiktok</code> فى نهاية الـ URL.
+      </p>
+      <div class="grid-2">
+        <div class="chart-wrap" style="height:280px"><canvas id="platformChart"></canvas></div>
+        <div class="scroll-tbl">
+          <table>
+            <thead><tr><th>المنصة</th><th style="text-align:center">زوار</th><th style="text-align:center">تفاعلات</th><th style="text-align:center">معدل تحويل</th></tr></thead>
+            <tbody id="platformTbl"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- UTM Campaign breakdown -->
+    <div class="card" style="margin-bottom:16px">
+      <h2>🎯 أداء الحملات الإعلانية (UTM Campaigns) <span class="count" id="campCount"></span></h2>
+      <div class="scroll-tbl">
+        <table>
+          <thead><tr><th>الحملة</th><th>المنصة</th><th style="text-align:center">جلسات</th><th style="text-align:center">واتساب</th><th style="text-align:center">اتصالات</th><th style="text-align:center">CTR</th></tr></thead>
+          <tbody id="campTbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CTR per CTA -->
+    <div class="card" style="margin-bottom:16px">
+      <h2>📊 معدل النقر على الأزرار (CTR) <span class="count" id="ctrCount"></span></h2>
+      <p style="color:#94A3B8;font-size:12px;margin-bottom:14px">نسبة الزوار اللى ضغطوا على كل زرار (Clicks / Visitors)</p>
+      <div class="scroll-tbl">
+        <table>
+          <thead><tr><th>الفعل</th><th style="text-align:center">عدد الضغطات</th><th style="text-align:center">زوار فريدون</th><th style="text-align:center">CTR</th></tr></thead>
+          <tbody id="ctrTbl"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Sources + Time on page + Recent -->
     <div class="grid-2">
       <div class="card">
-        <h2>🌐 مصادر الزيارات (Referrers)</h2>
+        <h2>🌐 مصادر الزيارات (Referrer Domains)</h2>
         <div class="scroll-tbl">
           <table><thead><tr><th>المصدر</th><th>جلسات</th></tr></thead><tbody id="refTbl"></tbody></table>
         </div>
@@ -282,12 +354,14 @@ document.getElementById('logoutBtn').addEventListener('click',function(){
 var ALL_EVENTS=[];
 var charts={};
 
+var DEMO_MODE=false;
+
 async function loadData(){
   if(DASHBOARD_ENDPOINT.indexOf('REPLACE_WITH')>-1){
     showSetupBanner();
     document.getElementById('loader').style.display='none';
     document.getElementById('content').style.display='block';
-    ALL_EVENTS=generateDemoData();
+    ALL_EVENTS=DEMO_MODE?generateDemoData():[];
     render();
     return;
   }
@@ -295,6 +369,7 @@ async function loadData(){
     var res=await fetch(DASHBOARD_ENDPOINT+'?action=list&t='+Date.now());
     var data=await res.json();
     ALL_EVENTS=data.events||[];
+    document.getElementById('liveBanner').style.display='block';
     document.getElementById('loader').style.display='none';
     document.getElementById('content').style.display='block';
     render();
@@ -302,7 +377,7 @@ async function loadData(){
     showSetupBanner();
     document.getElementById('loader').style.display='none';
     document.getElementById('content').style.display='block';
-    ALL_EVENTS=generateDemoData();
+    ALL_EVENTS=DEMO_MODE?generateDemoData():[];
     render();
   }
 }
@@ -310,11 +385,17 @@ async function loadData(){
 function showSetupBanner(){
   var b=document.getElementById('setupBanner');
   b.style.display='block';
-  document.getElementById('epDisplay').textContent=DASHBOARD_ENDPOINT;
 }
 
 document.getElementById('refreshBtn').addEventListener('click',loadData);
 document.getElementById('rangeSel').addEventListener('change',render);
+document.addEventListener('change',function(e){
+  if(e.target&&e.target.id==='demoToggle'){
+    DEMO_MODE=e.target.checked;
+    ALL_EVENTS=DEMO_MODE?generateDemoData():[];
+    render();
+  }
+});
 
 /* ============ DEMO DATA (when backend not connected) ============ */
 function generateDemoData(){
@@ -380,6 +461,8 @@ function render(){
   renderKPIs(events);
   renderVisitsChart(events);
   renderCategoriesChart(events);
+  renderBranchMaster(events);   /* ⭐ NEW */
+  renderBranchDaily(events);    /* ⭐ NEW */
   renderWhatsApp(events);
   renderPhone(events);
   renderBranches(events);
@@ -389,9 +472,208 @@ function render(){
   renderShop(events);
   renderCTA(events);
   renderFAQ(events);
+  renderPlatforms(events);      /* ⭐ NEW */
+  renderCampaigns(events);      /* ⭐ NEW */
+  renderCTR(events);            /* ⭐ NEW */
   renderReferrers(events);
   renderTimeOnPage(events);
   renderRecent(events);
+}
+
+/* ⭐ Master Branches Table — the most important table */
+function renderBranchMaster(events){
+  var br=events.filter(function(e){return e.category==='branches'});
+  document.getElementById('branchMasterCount').textContent=br.length+' تفاعل';
+  var data={};
+  br.forEach(function(e){
+    var name=e.label||'غير محدد';
+    if(!data[name])data[name]={maps:0,whatsapp:0,phone:0};
+    if(e.action.indexOf('maps')>-1)data[name].maps++;
+    else if(e.action.indexOf('whatsapp')>-1)data[name].whatsapp++;
+    else if(e.action.indexOf('phone')>-1)data[name].phone++;
+  });
+  var rows=Object.keys(data).map(function(name){
+    var d=data[name];return{name:name,maps:d.maps,whatsapp:d.whatsapp,phone:d.phone,total:d.maps+d.whatsapp+d.phone};
+  }).sort(function(a,b){return b.total-a.total});
+  if(rows.length===0){
+    document.getElementById('branchMasterTbl').innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748B;padding:30px">لا توجد تفاعلات مع الفروع بعد</td></tr>';
+    return;
+  }
+  var max=rows[0].total;
+  document.getElementById('branchMasterTbl').innerHTML=rows.map(function(r){
+    var pct=(r.total/max*100).toFixed(0);
+    return '<tr>'+
+      '<td class="bar-cell" style="--pct:'+pct+'%;font-weight:600;color:#fff">'+r.name+'</td>'+
+      '<td style="text-align:center;color:#3B82F6;font-weight:700">'+r.maps+'</td>'+
+      '<td style="text-align:center;color:#10B981;font-weight:700">'+r.whatsapp+'</td>'+
+      '<td style="text-align:center;color:#F97316;font-weight:700">'+r.phone+'</td>'+
+      '<td style="text-align:center;color:#F5C518;font-weight:800;font-size:15px">'+r.total+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+/* ⭐ Daily branches trend */
+function renderBranchDaily(events){
+  var days=document.getElementById('rangeSel').value;
+  var numDays=days==='all'?30:Math.min(parseInt(days),30);
+  var now=new Date();now.setHours(0,0,0,0);
+  var labels=[],maps=[],wa=[],phone=[];
+  for(var i=numDays-1;i>=0;i--){
+    var d=new Date(now);d.setDate(d.getDate()-i);
+    var next=new Date(d);next.setDate(next.getDate()+1);
+    var day=events.filter(function(e){var t=new Date(e.ts);return t>=d&&t<next&&e.category==='branches'});
+    labels.push(d.toLocaleDateString('ar-EG',{month:'short',day:'numeric'}));
+    maps.push(day.filter(function(e){return e.action.indexOf('maps')>-1}).length);
+    wa.push(day.filter(function(e){return e.action.indexOf('whatsapp')>-1}).length);
+    phone.push(day.filter(function(e){return e.action.indexOf('phone')>-1}).length);
+  }
+  if(charts.bd)charts.bd.destroy();
+  charts.bd=new Chart(document.getElementById('branchDailyChart'),{
+    type:'line',
+    data:{labels:labels,datasets:[
+      {label:'🗺️ الموقع',data:maps,borderColor:'#3B82F6',backgroundColor:'#3B82F622',tension:.3,borderWidth:2},
+      {label:'💬 واتساب',data:wa,borderColor:'#10B981',backgroundColor:'#10B98122',tension:.3,borderWidth:2},
+      {label:'📞 اتصال',data:phone,borderColor:'#F97316',backgroundColor:'#F9731622',tension:.3,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94A3B8'}}},scales:{x:{ticks:{color:'#94A3B8'},grid:{color:'#33415544'}},y:{ticks:{color:'#94A3B8'},grid:{color:'#33415544'}}}}
+  });
+}
+
+/* ⭐ Platform Breakdown */
+var PLATFORM_LABELS={
+  meta:'Meta Ads',meta_organic:'Meta Organic',
+  tiktok:'TikTok Ads',tiktok_organic:'TikTok Organic',
+  snapchat:'Snapchat Ads',snapchat_organic:'Snapchat Organic',
+  google_ads:'Google Ads',google_organic:'Google Organic',
+  youtube:'YouTube',twitter:'Twitter/X',bing:'Bing',
+  whatsapp:'WhatsApp',referral:'مواقع أخرى',direct:'مباشر / Direct'
+};
+var PLATFORM_COLORS={
+  meta:'#1877F2',meta_organic:'#4267B2',
+  tiktok:'#FE2C55',tiktok_organic:'#000',
+  snapchat:'#FFFC00',snapchat_organic:'#E5E500',
+  google_ads:'#4285F4',google_organic:'#34A853',
+  youtube:'#FF0000',twitter:'#1DA1F2',bing:'#0067B8',
+  whatsapp:'#25D366',referral:'#94A3B8',direct:'#64748B'
+};
+function renderPlatforms(events){
+  /* Group by session — each session has one platform */
+  var sessions={};
+  events.forEach(function(e){
+    var p=e.platform||'direct';
+    if(!sessions[e.sid]){sessions[e.sid]={platform:p,events:0,contacts:0}}
+    sessions[e.sid].events++;
+    if(e.action==='whatsapp_click'||e.action==='phone_click'||e.category==='branches')sessions[e.sid].contacts++;
+  });
+  var pData={};
+  Object.values(sessions).forEach(function(s){
+    var p=s.platform;
+    if(!pData[p])pData[p]={visitors:0,events:0,contacts:0};
+    pData[p].visitors++;
+    pData[p].events+=s.events;
+    pData[p].contacts+=s.contacts;
+  });
+  var rows=Object.keys(pData).map(function(p){return{p:p,d:pData[p]}}).sort(function(a,b){return b.d.visitors-a.d.visitors});
+  document.getElementById('platformCount').textContent=Object.keys(sessions).length+' جلسة';
+
+  /* Chart */
+  if(charts.platform)charts.platform.destroy();
+  charts.platform=new Chart(document.getElementById('platformChart'),{
+    type:'doughnut',
+    data:{
+      labels:rows.map(function(r){return PLATFORM_LABELS[r.p]||r.p}),
+      datasets:[{data:rows.map(function(r){return r.d.visitors}),backgroundColor:rows.map(function(r){return PLATFORM_COLORS[r.p]||'#94A3B8'}),borderColor:'#0F172A',borderWidth:2}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#94A3B8',font:{size:12},padding:10}}}}
+  });
+
+  /* Table */
+  if(rows.length===0){
+    document.getElementById('platformTbl').innerHTML='<tr><td colspan="4" style="text-align:center;color:#64748B;padding:20px">لا توجد بيانات بعد</td></tr>';
+    return;
+  }
+  document.getElementById('platformTbl').innerHTML=rows.map(function(r){
+    var cr=r.d.visitors>0?(r.d.contacts/r.d.visitors*100).toFixed(1):0;
+    var color=PLATFORM_COLORS[r.p]||'#94A3B8';
+    return '<tr>'+
+      '<td style="font-weight:600"><span style="display:inline-block;width:10px;height:10px;background:'+color+';border-radius:50%;margin-left:6px"></span>'+(PLATFORM_LABELS[r.p]||r.p)+'</td>'+
+      '<td style="text-align:center;color:#fff;font-weight:700">'+r.d.visitors+'</td>'+
+      '<td style="text-align:center;color:#94A3B8">'+r.d.contacts+'</td>'+
+      '<td style="text-align:center;color:'+(cr>5?'#10B981':cr>2?'#F5C518':'#EF4444')+';font-weight:700">'+cr+'%</td>'+
+    '</tr>';
+  }).join('');
+}
+
+/* ⭐ UTM Campaigns */
+function renderCampaigns(events){
+  var camps={};
+  /* Group by campaign — only sessions with utm_campaign */
+  events.forEach(function(e){
+    if(!e.utm_campaign)return;
+    var k=e.utm_campaign;
+    if(!camps[k])camps[k]={platform:e.platform||'direct',sessions:{},wa:0,phone:0};
+    camps[k].sessions[e.sid]=1;
+    if(e.action==='whatsapp_click')camps[k].wa++;
+    if(e.action==='phone_click')camps[k].phone++;
+  });
+  var rows=Object.keys(camps).map(function(k){
+    var c=camps[k];var s=Object.keys(c.sessions).length;
+    return{name:k,platform:c.platform,sessions:s,wa:c.wa,phone:c.phone,ctr:s>0?((c.wa+c.phone)/s*100).toFixed(1):0};
+  }).sort(function(a,b){return b.sessions-a.sessions});
+  document.getElementById('campCount').textContent=rows.length+' حملة';
+  if(rows.length===0){
+    document.getElementById('campTbl').innerHTML='<tr><td colspan="6" style="text-align:center;color:#64748B;padding:20px">لا توجد حملات بـ UTM بعد. ضيف <code style="background:#0F172A;padding:2px 6px;border-radius:4px;color:#F5C518">?utm_source=facebook&utm_campaign=summer_sale</code> فى نهاية رابط الإعلان.</td></tr>';
+    return;
+  }
+  document.getElementById('campTbl').innerHTML=rows.map(function(r){
+    return '<tr>'+
+      '<td style="font-weight:600;color:#fff">'+r.name+'</td>'+
+      '<td><span class="tag" style="background:'+(PLATFORM_COLORS[r.platform]||'#94A3B8')+'22;color:'+(PLATFORM_COLORS[r.platform]||'#94A3B8')+'">'+(PLATFORM_LABELS[r.platform]||r.platform)+'</span></td>'+
+      '<td style="text-align:center;color:#F5C518;font-weight:700">'+r.sessions+'</td>'+
+      '<td style="text-align:center;color:#10B981;font-weight:700">'+r.wa+'</td>'+
+      '<td style="text-align:center;color:#F97316;font-weight:700">'+r.phone+'</td>'+
+      '<td style="text-align:center;color:'+(r.ctr>5?'#10B981':r.ctr>2?'#F5C518':'#EF4444')+';font-weight:700">'+r.ctr+'%</td>'+
+    '</tr>';
+  }).join('');
+}
+
+/* ⭐ CTR per action */
+function renderCTR(events){
+  var visitors=uniq(events.map(function(e){return e.vid})).length;
+  var actions={
+    'ضغط واتساب':events.filter(function(e){return e.action==='whatsapp_click'}).length,
+    'مكالمة تليفون':events.filter(function(e){return e.action==='phone_click'}).length,
+    'تفاعل فروع (موقع)':events.filter(function(e){return e.action.indexOf('branch_maps')>-1}).length,
+    'تفاعل فروع (واتس)':events.filter(function(e){return e.action.indexOf('branch_whatsapp')>-1}).length,
+    'تفاعل فروع (اتصال)':events.filter(function(e){return e.action.indexOf('branch_phone')>-1}).length,
+    'ضغط متجر':events.filter(function(e){return e.action==='shop_click'}).length,
+    'ضغط CTA':events.filter(function(e){return e.category==='cta'}).length,
+    'فتح FAQ':events.filter(function(e){return e.action==='faq_click'}).length,
+    'طلب امتياز':events.filter(function(e){return e.action==='franchise_submit'}).length
+  };
+  var rows=Object.keys(actions).map(function(k){
+    var clicks=actions[k];
+    var clickers=uniq(events.filter(function(e){
+      if(k==='ضغط واتساب')return e.action==='whatsapp_click';
+      if(k==='مكالمة تليفون')return e.action==='phone_click';
+      return false;
+    }).map(function(e){return e.vid})).length;
+    var unique=clickers||clicks;
+    return{name:k,clicks:clicks,unique:unique,ctr:visitors>0?(unique/visitors*100).toFixed(1):0};
+  }).sort(function(a,b){return b.clicks-a.clicks});
+  document.getElementById('ctrCount').textContent=visitors+' زائر فريد';
+  if(visitors===0){
+    document.getElementById('ctrTbl').innerHTML='<tr><td colspan="4" style="text-align:center;color:#64748B;padding:20px">لا توجد بيانات بعد</td></tr>';
+    return;
+  }
+  document.getElementById('ctrTbl').innerHTML=rows.map(function(r){
+    return '<tr>'+
+      '<td style="font-weight:600">'+r.name+'</td>'+
+      '<td style="text-align:center;color:#fff;font-weight:700">'+r.clicks+'</td>'+
+      '<td style="text-align:center;color:#94A3B8">'+r.unique+'</td>'+
+      '<td style="text-align:center;color:'+(r.ctr>10?'#10B981':r.ctr>3?'#F5C518':'#EF4444')+';font-weight:800">'+r.ctr+'%</td>'+
+    '</tr>';
+  }).join('');
 }
 
 function uniq(arr){var s={};arr.forEach(function(x){s[x]=1});return Object.keys(s)}
