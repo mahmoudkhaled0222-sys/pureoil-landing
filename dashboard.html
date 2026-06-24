@@ -374,6 +374,28 @@ document.getElementById('logoutBtn').addEventListener('click',function(){
 
 /* ============ DATA LOADING ============ */
 var ALL_EVENTS=[];
+
+/* ============ DE-DUPLICATION ============
+   Removes duplicate events: same sid + same action + same label
+   within a 3-second window (handles double-clicks, retries, double-tracking).
+============================================ */
+function dedupeEvents(arr){
+  var seen={};
+  var out=[];
+  arr.forEach(function(e){
+    var t=new Date(e.ts).getTime()||0;
+    /* Bucket time into 3-second windows */
+    var bucket=Math.floor(t/3000);
+    var key=(e.sid||'')+'|'+(e.action||'')+'|'+(e.label||'')+'|'+bucket;
+    if(seen[key])return;
+    seen[key]=1;
+    out.push(e);
+  });
+  if(arr.length!==out.length){
+    console.log('[Dedup] Removed '+(arr.length-out.length)+' duplicate events');
+  }
+  return out;
+}
 var charts={};
 
 var DEMO_MODE=false;
@@ -390,7 +412,7 @@ async function loadData(){
   try{
     var res=await fetch(DASHBOARD_ENDPOINT+'?action=list&t='+Date.now());
     var data=await res.json();
-    ALL_EVENTS=data.events||[];
+    ALL_EVENTS=dedupeEvents(data.events||[]);
     document.getElementById('liveBanner').style.display='block';
     document.getElementById('loader').style.display='none';
     document.getElementById('content').style.display='block';

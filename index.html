@@ -1769,8 +1769,9 @@ function trackEvent(category, action, label) {
 /* --- Initial Page View to Dashboard --- */
 trackEvent('page','pageview',document.title);
 
-/* --- WhatsApp Clicks --- */
+/* --- WhatsApp Clicks (skip if inside branch-card — branch handler will fire instead) --- */
 document.querySelectorAll('a[href*="wa.me"]').forEach(function(el){
+  if(el.closest('.branch-card'))return; /* avoid double-tracking */
   el.addEventListener('click',function(){
     var loc=el.closest('section');
     var sectionId=loc?loc.id:'unknown';
@@ -1778,8 +1779,9 @@ document.querySelectorAll('a[href*="wa.me"]').forEach(function(el){
   });
 });
 
-/* --- Phone Call Clicks --- */
+/* --- Phone Call Clicks (skip if inside branch-card) --- */
 document.querySelectorAll('a[href^="tel:"]').forEach(function(el){
+  if(el.closest('.branch-card'))return; /* avoid double-tracking */
   el.addEventListener('click',function(){
     var phone=el.getAttribute('href').replace('tel:','');
     var loc=el.closest('section');
