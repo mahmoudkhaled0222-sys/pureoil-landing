@@ -119,7 +119,15 @@ footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-si
         <option value="30">آخر 30 يوم</option>
         <option value="90">آخر 90 يوم</option>
         <option value="all">كل الفترة</option>
+        <option value="custom">📅 فترة مخصصة</option>
       </select>
+      <div id="customRangeWrap" style="display:none;gap:6px;align-items:center;background:#0F172A;padding:6px 10px;border-radius:8px;border:1px solid #334155">
+        <label style="color:#94A3B8;font-size:11px">من:</label>
+        <input type="date" id="dateFrom" style="background:#1E293B;color:#fff;border:1px solid #334155;padding:4px 6px;border-radius:4px;font-size:12px">
+        <label style="color:#94A3B8;font-size:11px">إلى:</label>
+        <input type="date" id="dateTo" style="background:#1E293B;color:#fff;border:1px solid #334155;padding:4px 6px;border-radius:4px;font-size:12px">
+        <button id="applyRange" style="background:#F5C518;color:#000;border:0;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">طبّق</button>
+      </div>
       <button class="refresh" id="refreshBtn">🔄 تحديث</button>
       <button id="logoutBtn">خروج</button>
     </div>
@@ -257,53 +265,29 @@ footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-si
       </div>
     </div>
 
-    <!-- ⭐ FUNNEL — Platform → Campaign → Adset → Ad → Actions -->
+    <!-- ⭐ FUNNEL — Hierarchical Accordion: Campaign → Adset → Ad -->
     <div class="card" style="margin-bottom:16px;border:2px solid #F5C518">
-      <h2>🎯 تحليل الحملات الشامل — كل زائر جا منين وعمل اى <span class="count" id="campCount"></span></h2>
-      <p style="color:#94A3B8;font-size:12px;margin-bottom:10px">
-        كل صف بيقولك: <b style="color:#F5C518">المنصة + الحملة + الادسيت (utm_term = الفرع) + الإعلان (utm_content)</b> — وعدد الجلسات والأكشنز اللى عملوها (موقع/واتس/اتصال/متجر/FAQ).
-        <br>
-        🎯 <b style="color:#10B981">العمود الأخير</b> بيقولك الفرع اللى الزائر <b>فعلاً</b> تفاعل معاه — لو <span style="color:#10B981">✅ أخضر</span> يبقى مطابق للادسيت (استهداف سليم)، لو <span style="color:#EF4444">⚠️ أحمر</span> يبقى زاره فرع تانى (الاستهداف غلط لازم تظبطه).
+      <h2>🎯 تحليل الحملات الشامل <span class="count" id="campCount"></span></h2>
+      <p style="color:#94A3B8;font-size:12px;margin-bottom:12px">
+        اضغط <b style="color:#F5C518">▶</b> جنب الحملة عشان تفتح الادسيتس، واضغط جنب الادسيت تفتح الإعلانات. كل صف بيوريك الجلسات + الأكشنز + الفروع اللى اتزارت.
       </p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-        <label style="color:#94A3B8;font-size:12px">فلتر المنصة:</label>
-        <select id="funnelPlatformFilter" style="background:#0F172A;color:#fff;border:1px solid #334155;padding:6px 10px;border-radius:6px;font-size:12px">
-          <option value="">كل المنصات</option>
+      <!-- Funnel KPI tiles -->
+      <div id="funnelKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px"></div>
+      <!-- Filters -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;background:#0F172A;padding:10px;border-radius:8px">
+        <label style="color:#94A3B8;font-size:12px">المنصة:</label>
+        <select id="funnelPlatformFilter" style="background:#1E293B;color:#fff;border:1px solid #334155;padding:6px 10px;border-radius:6px;font-size:12px">
+          <option value="">الكل</option>
         </select>
-        <label style="color:#94A3B8;font-size:12px;margin-right:12px">فلتر الحملة:</label>
-        <select id="funnelCampaignFilter" style="background:#0F172A;color:#fff;border:1px solid #334155;padding:6px 10px;border-radius:6px;font-size:12px">
-          <option value="">كل الحملات</option>
+        <label style="color:#94A3B8;font-size:12px;margin-right:12px">الحملة:</label>
+        <select id="funnelCampaignFilter" style="background:#1E293B;color:#fff;border:1px solid #334155;padding:6px 10px;border-radius:6px;font-size:12px">
+          <option value="">الكل</option>
         </select>
-        <label style="color:#94A3B8;font-size:12px;margin-right:12px">المستوى:</label>
-        <select id="funnelLevel" style="background:#0F172A;color:#fff;border:1px solid #334155;padding:6px 10px;border-radius:6px;font-size:12px">
-          <option value="full">تفصيلي كامل (إعلان × ادسيت)</option>
-          <option value="adset">ادسيت (utm_term) — مجموع</option>
-          <option value="campaign">حملة — مجموع</option>
-          <option value="platform">منصة فقط — مجموع</option>
-        </select>
+        <button id="expandAllBtn" style="background:#F5C518;color:#000;border:0;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;margin-right:auto">📂 افتح الكل</button>
+        <button id="collapseAllBtn" style="background:#334155;color:#fff;border:0;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer">📁 اطوي الكل</button>
       </div>
-      <div class="scroll-tbl" style="max-height:600px">
-        <table style="font-size:12px">
-          <thead style="position:sticky;top:0;background:#0F172A;z-index:2">
-            <tr>
-              <th>المنصة</th>
-              <th>الحملة</th>
-              <th>الادسيت (الفرع)</th>
-              <th>الإعلان</th>
-              <th style="text-align:center">جلسات</th>
-              <th style="text-align:center" title="ضغط على الموقع/Maps">🗺️</th>
-              <th style="text-align:center" title="واتساب">💬</th>
-              <th style="text-align:center" title="مكالمة">📞</th>
-              <th style="text-align:center" title="متجر">🛒</th>
-              <th style="text-align:center" title="FAQ">❓</th>
-              <th style="text-align:center">إجمالى أكشن</th>
-              <th style="text-align:center">CTR</th>
-              <th style="min-width:220px">🎯 الفروع اللى اتزارت فعلاً</th>
-            </tr>
-          </thead>
-          <tbody id="campTbl"></tbody>
-        </table>
-      </div>
+      <!-- Accordion container -->
+      <div id="funnelAccordion" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
 
     <!-- CTR per CTA -->
@@ -426,7 +410,18 @@ function showSetupBanner(){
 }
 
 document.getElementById('refreshBtn').addEventListener('click',loadData);
-document.getElementById('rangeSel').addEventListener('change',render);
+document.getElementById('rangeSel').addEventListener('change',function(){
+  var custom=this.value==='custom';
+  document.getElementById('customRangeWrap').style.display=custom?'inline-flex':'none';
+  if(!custom)render();
+});
+document.getElementById('applyRange').addEventListener('click',render);
+/* Set default dates to last 7 days */
+(function(){
+  var to=new Date(),from=new Date(Date.now()-7*86400000);
+  document.getElementById('dateTo').value=to.toISOString().slice(0,10);
+  document.getElementById('dateFrom').value=from.toISOString().slice(0,10);
+})();
 document.addEventListener('change',function(e){
   if(e.target&&e.target.id==='demoToggle'){
     DEMO_MODE=e.target.checked;
@@ -487,9 +482,17 @@ function generateDemoData(){
 
 /* ============ FILTERING ============ */
 function getFiltered(){
-  var days=document.getElementById('rangeSel').value;
-  if(days==='all')return ALL_EVENTS;
-  var cutoff=Date.now()-parseInt(days)*86400000;
+  var v=document.getElementById('rangeSel').value;
+  if(v==='all')return ALL_EVENTS;
+  if(v==='custom'){
+    var from=document.getElementById('dateFrom').value;
+    var to=document.getElementById('dateTo').value;
+    if(!from && !to)return ALL_EVENTS;
+    var fromT=from?new Date(from+'T00:00:00').getTime():0;
+    var toT=to?new Date(to+'T23:59:59').getTime():Date.now();
+    return ALL_EVENTS.filter(function(e){var t=new Date(e.ts).getTime();return t>=fromT && t<=toT});
+  }
+  var cutoff=Date.now()-parseInt(v)*86400000;
   return ALL_EVENTS.filter(function(e){return new Date(e.ts).getTime()>=cutoff});
 }
 
@@ -642,26 +645,19 @@ function renderPlatforms(events){
   }).join('');
 }
 
-/* Render branches-visited cell with match/mismatch warning vs targeted adset */
-function renderBranchesCell(branches,targetTerm){
+/* Render branches-visited cell — neutral display, no judgment icons */
+function renderBranchesCell(branches){
   var names=Object.keys(branches||{});
-  if(names.length===0)return '<span style="color:#475569;font-size:11px">— لم يتفاعل مع أى فرع —</span>';
-  /* Normalize targetTerm to compare (remove branch_ prefix, lowercase, strip spaces) */
-  var tgt=(targetTerm||'').toLowerCase().replace(/^branch[_\-\s]*/,'').replace(/[\s_\-]/g,'');
+  if(names.length===0)return '<span style="color:#475569;font-size:11px">—</span>';
   names.sort(function(a,b){return branches[b].total-branches[a].total});
   return names.map(function(n){
     var b=branches[n];
-    var norm=n.toLowerCase().replace(/[\s_\-]/g,'');
-    var isMatch=tgt && (norm.indexOf(tgt)>-1||tgt.indexOf(norm)>-1);
-    var hasTarget=tgt && targetTerm!=='—' && targetTerm!=='(بدون ادسيت)';
-    var color=!hasTarget?'#94A3B8':(isMatch?'#10B981':'#EF4444');
-    var icon=!hasTarget?'':(isMatch?'✅':'⚠️');
     var details=[];
     if(b.maps>0)details.push('🗺️'+b.maps);
     if(b.wa>0)details.push('💬'+b.wa);
     if(b.phone>0)details.push('📞'+b.phone);
-    return '<div style="margin:2px 0;padding:4px 8px;background:'+color+'15;border-right:3px solid '+color+';border-radius:4px;font-size:11px">'+
-      '<span style="color:'+color+';font-weight:700">'+icon+' '+n+'</span> '+
+    return '<div style="margin:2px 0;padding:4px 8px;background:#F5C51810;border-right:3px solid #F5C518;border-radius:4px;font-size:11px">'+
+      '<span style="color:#F5C518;font-weight:700">'+n+'</span> '+
       '<span style="color:#94A3B8;margin-right:6px">('+details.join(' · ')+' = '+b.total+')</span>'+
     '</div>';
   }).join('');
@@ -698,95 +694,181 @@ function renderCampaigns(events){
   drawFunnel();
 }
 
+/* Aggregate event into a stats object */
+function aggregateEvent(stats,e){
+  stats.sessions[e.sid]=1;
+  var a=e.action||'',c=e.category||'',lbl=(e.label||'').toString().trim();
+  var isBranchAction=(c==='branches')||a.indexOf('branch_')>-1;
+  if(a.indexOf('branch_maps')>-1||a==='maps_click'||a==='location_click')stats.maps++;
+  if(a==='whatsapp_click'||a.indexOf('branch_whatsapp')>-1||a==='whatsapp')stats.wa++;
+  if(a==='phone_click'||a.indexOf('branch_phone')>-1||a==='call')stats.phone++;
+  if(a==='shop_click'||c==='shop')stats.shop++;
+  if(a==='faq_click'||c==='faq')stats.faq++;
+  if(isBranchAction && lbl){
+    var bKey=lbl.replace(/^📍\s*/,'').trim();
+    if(!stats.branches[bKey])stats.branches[bKey]={maps:0,wa:0,phone:0,total:0};
+    var b=stats.branches[bKey];
+    if(a.indexOf('maps')>-1)b.maps++;
+    else if(a.indexOf('whatsapp')>-1)b.wa++;
+    else if(a.indexOf('phone')>-1)b.phone++;
+    b.total++;
+  }
+}
+function newStats(){return{sessions:{},maps:0,wa:0,phone:0,shop:0,faq:0,branches:{}};}
+function finalizeStats(s){
+  var sess=Object.keys(s.sessions).length;
+  var tot=s.maps+s.wa+s.phone+s.shop+s.faq;
+  return{sessions:sess,maps:s.maps,wa:s.wa,phone:s.phone,shop:s.shop,faq:s.faq,
+    total:tot,ctr:sess>0?(tot/sess*100).toFixed(1):0,branches:s.branches};
+}
+
+/* Mini action-counter chips */
+function renderActionChips(r){
+  function chip(emoji,n,col){return n>0?'<span style="background:'+col+'22;color:'+col+';padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:4px">'+emoji+' '+n+'</span>':'';}
+  return chip('🗺️',r.maps,'#3B82F6')+chip('💬',r.wa,'#10B981')+chip('📞',r.phone,'#F97316')+chip('🛒',r.shop,'#EC4899')+chip('❓',r.faq,'#A855F7');
+}
+
 function drawFunnel(){
   var events=FUNNEL_EVENTS_CACHE;
   var pFilter=(document.getElementById('funnelPlatformFilter')||{}).value||'';
   var cFilter=(document.getElementById('funnelCampaignFilter')||{}).value||'';
-  var level=(document.getElementById('funnelLevel')||{}).value||'full';
 
-  /* Apply filters */
   var filtered=events.filter(function(e){
     if(pFilter && (e.platform||'direct')!==pFilter)return false;
     if(cFilter && (e.utm_campaign||'')!==cFilter)return false;
     return true;
   });
 
-  /* Build grouping key based on level */
-  function keyFor(e){
+  /* Build hierarchy: campaign → adset → ad */
+  var tree={};
+  filtered.forEach(function(e){
     var plat=e.platform||'direct';
     var camp=e.utm_campaign||'(بدون حملة)';
     var term=e.utm_term||'(بدون ادسيت)';
     var cont=e.utm_content||'(بدون إعلان)';
-    if(level==='platform')return JSON.stringify([plat,'—','—','—']);
-    if(level==='campaign')return JSON.stringify([plat,camp,'—','—']);
-    if(level==='adset')return JSON.stringify([plat,camp,term,'—']);
-    return JSON.stringify([plat,camp,term,cont]);
-  }
-
-  var groups={};
-  filtered.forEach(function(e){
-    var k=keyFor(e);
-    if(!groups[k]){
-      var parts=JSON.parse(k);
-      groups[k]={platform:parts[0],campaign:parts[1],term:parts[2],content:parts[3],
-        sessions:{},maps:0,wa:0,phone:0,shop:0,faq:0,branches:{}};
-    }
-    var g=groups[k];
-    g.sessions[e.sid]=1;
-    var a=e.action||'',c=e.category||'',lbl=(e.label||'').toString().trim();
-    var isBranchAction=(c==='branches')||a.indexOf('branch_')>-1;
-    if(a.indexOf('branch_maps')>-1||a==='maps_click'||a==='location_click')g.maps++;
-    if(a==='whatsapp_click'||a.indexOf('branch_whatsapp')>-1||a==='whatsapp')g.wa++;
-    if(a==='phone_click'||a.indexOf('branch_phone')>-1||a==='call')g.phone++;
-    if(a==='shop_click'||c==='shop')g.shop++;
-    if(a==='faq_click'||c==='faq')g.faq++;
-    /* Track WHICH branch was visited */
-    if(isBranchAction && lbl){
-      var bKey=lbl.replace(/^📍\s*/,'').trim();
-      if(!g.branches[bKey])g.branches[bKey]={maps:0,wa:0,phone:0,total:0};
-      var b=g.branches[bKey];
-      if(a.indexOf('maps')>-1)b.maps++;
-      else if(a.indexOf('whatsapp')>-1)b.wa++;
-      else if(a.indexOf('phone')>-1)b.phone++;
-      b.total++;
-    }
+    var cKey=plat+'||'+camp;
+    if(!tree[cKey])tree[cKey]={platform:plat,campaign:camp,stats:newStats(),adsets:{}};
+    aggregateEvent(tree[cKey].stats,e);
+    if(!tree[cKey].adsets[term])tree[cKey].adsets[term]={term:term,stats:newStats(),ads:{}};
+    aggregateEvent(tree[cKey].adsets[term].stats,e);
+    if(!tree[cKey].adsets[term].ads[cont])tree[cKey].adsets[term].ads[cont]={content:cont,stats:newStats()};
+    aggregateEvent(tree[cKey].adsets[term].ads[cont].stats,e);
   });
 
-  var rows=Object.keys(groups).map(function(k){
-    var g=groups[k];var s=Object.keys(g.sessions).length;
-    var tot=g.maps+g.wa+g.phone+g.shop+g.faq;
-    return{platform:g.platform,campaign:g.campaign,term:g.term,content:g.content,
-      sessions:s,maps:g.maps,wa:g.wa,phone:g.phone,shop:g.shop,faq:g.faq,
-      total:tot,ctr:s>0?(tot/s*100).toFixed(1):0,branches:g.branches};
-  }).sort(function(a,b){return b.sessions-a.sessions});
+  /* KPI tiles */
+  var campCount=Object.keys(tree).length;
+  var adsetCount=0,adCount=0,totalSessions={},totalActions=0;
+  Object.keys(tree).forEach(function(k){
+    var c=tree[k];adsetCount+=Object.keys(c.adsets).length;
+    Object.keys(c.adsets).forEach(function(t){adCount+=Object.keys(c.adsets[t].ads).length;});
+    Object.keys(c.stats.sessions).forEach(function(s){totalSessions[s]=1;});
+    totalActions+=c.stats.maps+c.stats.wa+c.stats.phone+c.stats.shop+c.stats.faq;
+  });
+  var totalSess=Object.keys(totalSessions).length;
+  function kpi(label,val,color){
+    return '<div style="background:#0F172A;border:1px solid '+color+'44;border-right:3px solid '+color+';border-radius:8px;padding:10px 12px">'+
+      '<div style="color:#94A3B8;font-size:11px;margin-bottom:4px">'+label+'</div>'+
+      '<div style="color:'+color+';font-size:20px;font-weight:800">'+val+'</div></div>';
+  }
+  document.getElementById('funnelKpis').innerHTML=
+    kpi('الحملات',campCount,'#F5C518')+
+    kpi('الادسيتس',adsetCount,'#3B82F6')+
+    kpi('الإعلانات',adCount,'#10B981')+
+    kpi('إجمالى الجلسات',totalSess,'#A855F7')+
+    kpi('إجمالى الأكشن',totalActions,'#F97316');
 
-  document.getElementById('campCount').textContent=rows.length+' صف';
-  if(rows.length===0){
-    document.getElementById('campTbl').innerHTML='<tr><td colspan="13" style="text-align:center;color:#64748B;padding:20px">لا توجد بيانات. ضيف فى رابط الإعلان: <code style="background:#0F172A;padding:2px 6px;border-radius:4px;color:#F5C518">?utm_source=facebook&utm_campaign=summer&utm_term=branch_nazim&utm_content=video_30s</code></td></tr>';
+  document.getElementById('campCount').textContent=campCount+' حملة';
+
+  /* Render accordion */
+  var container=document.getElementById('funnelAccordion');
+  if(campCount===0){
+    container.innerHTML='<div style="text-align:center;color:#64748B;padding:30px;background:#0F172A;border-radius:8px">لا توجد بيانات فى الفترة المختارة.</div>';
     return;
   }
-  document.getElementById('campTbl').innerHTML=rows.map(function(r){
-    var pColor=PLATFORM_COLORS[r.platform]||'#94A3B8';
-    var pLabel=PLATFORM_LABELS[r.platform]||r.platform;
-    var ctrColor=r.ctr>5?'#10B981':r.ctr>2?'#F5C518':'#EF4444';
-    function num(v,col){return '<td style="text-align:center;color:'+(v>0?col:'#475569')+';font-weight:700">'+v+'</td>';}
-    return '<tr>'+
-      '<td><span class="tag" style="background:'+pColor+'22;color:'+pColor+';font-size:11px">'+pLabel+'</span></td>'+
-      '<td style="color:#fff;font-weight:600">'+r.campaign+'</td>'+
-      '<td style="color:#F5C518;font-weight:600">'+r.term+'</td>'+
-      '<td style="color:#94A3B8">'+r.content+'</td>'+
-      '<td style="text-align:center;color:#fff;font-weight:800">'+r.sessions+'</td>'+
-      num(r.maps,'#3B82F6')+
-      num(r.wa,'#10B981')+
-      num(r.phone,'#F97316')+
-      num(r.shop,'#EC4899')+
-      num(r.faq,'#A855F7')+
-      '<td style="text-align:center;color:#F5C518;font-weight:800">'+r.total+'</td>'+
-      '<td style="text-align:center;color:'+ctrColor+';font-weight:800">'+r.ctr+'%</td>'+
-      '<td>'+renderBranchesCell(r.branches,r.term)+'</td>'+
-    '</tr>';
+  var camps=Object.keys(tree).map(function(k){
+    var c=tree[k];return{key:k,platform:c.platform,campaign:c.campaign,
+      adsets:c.adsets,r:finalizeStats(c.stats)};
+  }).sort(function(a,b){return b.r.sessions-a.r.sessions});
+
+  container.innerHTML=camps.map(function(c,ci){
+    var pColor=PLATFORM_COLORS[c.platform]||'#94A3B8';
+    var pLabel=PLATFORM_LABELS[c.platform]||c.platform;
+    /* Campaign row */
+    var head='<div class="funnel-camp" data-id="c'+ci+'" style="background:linear-gradient(135deg,#F5C51815,#F5C51805);border:1px solid #F5C51844;border-radius:8px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+      '<span class="arrow" style="color:#F5C518;font-size:14px;width:14px">▶</span>'+
+      '<span class="tag" style="background:'+pColor+'22;color:'+pColor+';font-size:11px;padding:2px 8px;border-radius:10px">'+pLabel+'</span>'+
+      '<span style="color:#fff;font-weight:700;font-size:14px">'+c.campaign+'</span>'+
+      '<span style="color:#94A3B8;font-size:11px;margin-right:auto">جلسات: <b style="color:#F5C518">'+c.r.sessions+'</b> · CTR <b style="color:'+(c.r.ctr>5?'#10B981':'#EF4444')+'">'+c.r.ctr+'%</b></span>'+
+      renderActionChips(c.r)+
+    '</div>';
+
+    /* Adsets (hidden by default) */
+    var adsets=Object.keys(c.adsets).map(function(t){
+      var a=c.adsets[t];return{term:t,ads:a.ads,r:finalizeStats(a.stats)};
+    }).sort(function(a,b){return b.r.sessions-a.r.sessions});
+
+    var adsetsHtml=adsets.map(function(a,ai){
+      /* Adset row */
+      var aHead='<div class="funnel-adset" data-id="c'+ci+'a'+ai+'" style="background:#0F172A;border:1px solid #334155;border-radius:6px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-right:24px">'+
+        '<span class="arrow" style="color:#3B82F6;font-size:12px;width:12px">▶</span>'+
+        '<span style="color:#3B82F6;font-size:11px;font-weight:700">الادسيت:</span>'+
+        '<span style="color:#fff;font-weight:600">'+a.term+'</span>'+
+        '<span style="color:#94A3B8;font-size:11px;margin-right:auto">جلسات: <b style="color:#fff">'+a.r.sessions+'</b> · CTR <b style="color:'+(a.r.ctr>5?'#10B981':'#EF4444')+'">'+a.r.ctr+'%</b></span>'+
+        renderActionChips(a.r)+
+      '</div>';
+      /* Ads under adset */
+      var ads=Object.keys(a.ads).map(function(c){
+        var x=a.ads[c];return{content:c,r:finalizeStats(x.stats)};
+      }).sort(function(x,y){return y.r.sessions-x.r.sessions});
+      var adsHtml=ads.map(function(ad){
+        return '<div style="background:#020617;border:1px solid #1E293B;border-radius:6px;padding:10px 14px;margin:6px 48px 0 0;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">'+
+          '<span style="color:#10B981;font-size:11px;font-weight:700;min-width:60px">الإعلان:</span>'+
+          '<div style="flex:1;min-width:200px">'+
+            '<div style="color:#fff;font-weight:600;margin-bottom:6px">'+ad.content+'</div>'+
+            '<div style="color:#94A3B8;font-size:11px">جلسات: <b style="color:#fff">'+ad.r.sessions+'</b> · CTR <b style="color:'+(ad.r.ctr>5?'#10B981':'#EF4444')+'">'+ad.r.ctr+'%</b> '+renderActionChips(ad.r)+'</div>'+
+            (Object.keys(ad.r.branches).length>0?'<div style="margin-top:8px">'+renderBranchesCell(ad.r.branches)+'</div>':'')+
+          '</div>'+
+        '</div>';
+      }).join('');
+      return aHead+'<div class="funnel-ads" id="ads-c'+ci+'a'+ai+'" style="display:none;margin-right:24px">'+adsHtml+'</div>';
+    }).join('');
+
+    return '<div class="funnel-group">'+head+
+      '<div class="funnel-adsets" id="adsets-c'+ci+'" style="display:none;margin-top:6px;padding-right:8px;display:none">'+adsetsHtml+'</div>'+
+    '</div>';
   }).join('');
+
+  /* Bind click handlers */
+  container.querySelectorAll('.funnel-camp').forEach(function(el){
+    el.addEventListener('click',function(){
+      var box=document.getElementById('adsets-'+el.dataset.id);
+      var arr=el.querySelector('.arrow');
+      if(box.style.display==='none'){box.style.display='block';arr.textContent='▼';}
+      else{box.style.display='none';arr.textContent='▶';}
+    });
+  });
+  container.querySelectorAll('.funnel-adset').forEach(function(el){
+    el.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var box=document.getElementById('ads-'+el.dataset.id);
+      var arr=el.querySelector('.arrow');
+      if(box.style.display==='none'){box.style.display='block';arr.textContent='▼';}
+      else{box.style.display='none';arr.textContent='▶';}
+    });
+  });
 }
+
+/* Expand/collapse all */
+document.addEventListener('click',function(ev){
+  if(ev.target && ev.target.id==='expandAllBtn'){
+    document.querySelectorAll('#funnelAccordion .funnel-adsets, #funnelAccordion .funnel-ads').forEach(function(b){b.style.display='block';});
+    document.querySelectorAll('#funnelAccordion .arrow').forEach(function(a){a.textContent='▼';});
+  }
+  if(ev.target && ev.target.id==='collapseAllBtn'){
+    document.querySelectorAll('#funnelAccordion .funnel-adsets, #funnelAccordion .funnel-ads').forEach(function(b){b.style.display='none';});
+    document.querySelectorAll('#funnelAccordion .arrow').forEach(function(a){a.textContent='▶';});
+  }
+});
 
 /* ⭐ CTR per action */
 function renderCTR(events){
