@@ -399,6 +399,8 @@ function dedupeEvents(arr){
 var charts={};
 
 var DEMO_MODE=false;
+var BACKEND_FAIL_COUNT=0;
+var BACKEND_OK_ONCE=false;
 
 async function loadData(){
   if(DASHBOARD_ENDPOINT.indexOf('REPLACE_WITH')>-1){
@@ -409,21 +411,43 @@ async function loadData(){
     render();
     return;
   }
-  try{
-    var res=await fetch(DASHBOARD_ENDPOINT+'?action=list&t='+Date.now());
-    var data=await res.json();
-    ALL_EVENTS=dedupeEvents(data.events||[]);
-    document.getElementById('liveBanner').style.display='block';
-    document.getElementById('loader').style.display='none';
-    document.getElementById('content').style.display='block';
-    render();
-  }catch(e){
-    showSetupBanner();
-    document.getElementById('loader').style.display='none';
-    document.getElementById('content').style.display='block';
-    ALL_EVENTS=DEMO_MODE?generateDemoData():[];
-    render();
+  /* Retry up to 3 times before giving up */
+  var lastErr=null;
+  for(var attempt=0;attempt<3;attempt++){
+    try{
+      var ctrl=new AbortController();
+      var timer=setTimeout(function(){ctrl.abort();},15000);
+      var res=await fetch(DASHBOARD_ENDPOINT+'?action=list&t='+Date.now(),{signal:ctrl.signal});
+      clearTimeout(timer);
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      var data=await res.json();
+      ALL_EVENTS=dedupeEvents(data.events||[]);
+      BACKEND_FAIL_COUNT=0;
+      BACKEND_OK_ONCE=true;
+      document.getElementById('liveBanner').style.display='block';
+      document.getElementById('setupBanner').style.display='none';
+      document.getElementById('loader').style.display='none';
+      document.getElementById('content').style.display='block';
+      render();
+      return;
+    }catch(e){
+      lastErr=e;
+      if(attempt<2)await new Promise(function(r){setTimeout(r,1500);});
+    }
   }
+  /* All retries failed */
+  BACKEND_FAIL_COUNT++;
+  console.warn('[Backend] fetch failed:',lastErr,'consecutive fails:',BACKEND_FAIL_COUNT);
+  document.getElementById('loader').style.display='none';
+  document.getElementById('content').style.display='block';
+  /* If we connected successfully before, this is just a transient blip — keep existing data, don't show error */
+  if(BACKEND_OK_ONCE && BACKEND_FAIL_COUNT<3){
+    return; /* silently keep last successful data */
+  }
+  /* Truly broken — show banner */
+  showSetupBanner();
+  if(!ALL_EVENTS.length)ALL_EVENTS=DEMO_MODE?generateDemoData():[];
+  render();
 }
 
 function showSetupBanner(){
