@@ -666,9 +666,28 @@ function renderBranchesCell(branches){
 /* ⭐ FUNNEL — Platform × Campaign × Adset(utm_term) × Ad(utm_content) × Actions */
 var FUNNEL_EVENTS_CACHE=[];
 var FUNNEL_OPEN_STATE={camps:{},adsets:{}}; /* persists open/close across re-renders */
+var FUNNEL_LAST_INTERACTION=0; /* timestamp of last user interaction with funnel */
+var FUNNEL_LAST_HASH=''; /* cache: skip rebuild if data unchanged */
+function markFunnelInteraction(){FUNNEL_LAST_INTERACTION=Date.now();}
+/* Pause auto-rebuild for 20s after any interaction in the funnel section */
+document.addEventListener('DOMContentLoaded',function(){
+  setTimeout(function(){
+    var sec=document.querySelector('#funnelAccordion');
+    if(!sec)return;
+    /* Catch any user interaction inside funnel area */
+    ['mousedown','click','change','focus','mousemove'].forEach(function(ev){
+      var card=document.querySelector('#funnelAccordion').closest('.card');
+      if(card)card.addEventListener(ev,markFunnelInteraction,true);
+    });
+  },1000);
+});
 function renderCampaigns(events){
   FUNNEL_EVENTS_CACHE=events;
-  /* Populate filter dropdowns */
+  /* If user interacted within last 20s — skip rebuild entirely */
+  if(Date.now()-FUNNEL_LAST_INTERACTION<20000 && document.getElementById('funnelAccordion').children.length>0){
+    return;
+  }
+  /* Populate filter dropdowns — only if options actually changed */
   var platforms={},campaigns={};
   events.forEach(function(e){
     if(e.platform)platforms[e.platform]=1;
@@ -676,22 +695,30 @@ function renderCampaigns(events){
   });
   var pf=document.getElementById('funnelPlatformFilter');
   var cf=document.getElementById('funnelCampaignFilter');
-  if(pf && pf.options.length<=1){
-    Object.keys(platforms).sort().forEach(function(p){
-      var o=document.createElement('option');o.value=p;o.textContent=PLATFORM_LABELS[p]||p;pf.appendChild(o);
-    });
-    pf.addEventListener('change',drawFunnel);
+  if(pf){
+    var pKeys=Object.keys(platforms).sort().join('|');
+    if(pf._lastKeys!==pKeys){
+      var prevP=pf.value;
+      pf.innerHTML='<option value="">الكل</option>';
+      Object.keys(platforms).sort().forEach(function(p){
+        var o=document.createElement('option');o.value=p;o.textContent=PLATFORM_LABELS[p]||p;if(p===prevP)o.selected=true;pf.appendChild(o);
+      });
+      pf._lastKeys=pKeys;
+    }
+    if(!pf._bound){pf.addEventListener('change',function(){markFunnelInteraction();drawFunnel();});pf._bound=true;}
   }
   if(cf){
-    var prevC=cf.value;
-    cf.innerHTML='<option value="">كل الحملات</option>';
-    Object.keys(campaigns).sort().forEach(function(c){
-      var o=document.createElement('option');o.value=c;o.textContent=c;if(c===prevC)o.selected=true;cf.appendChild(o);
-    });
-    if(!cf._bound){cf.addEventListener('change',drawFunnel);cf._bound=true;}
+    var cKeys=Object.keys(campaigns).sort().join('|');
+    if(cf._lastKeys!==cKeys){
+      var prevC=cf.value;
+      cf.innerHTML='<option value="">الكل</option>';
+      Object.keys(campaigns).sort().forEach(function(c){
+        var o=document.createElement('option');o.value=c;o.textContent=c;if(c===prevC)o.selected=true;cf.appendChild(o);
+      });
+      cf._lastKeys=cKeys;
+    }
+    if(!cf._bound){cf.addEventListener('change',function(){markFunnelInteraction();drawFunnel();});cf._bound=true;}
   }
-  var lvl=document.getElementById('funnelLevel');
-  if(lvl && !lvl._bound){lvl.addEventListener('change',drawFunnel);lvl._bound=true;}
   drawFunnel();
 }
 
@@ -786,6 +813,14 @@ function drawFunnel(){
     container.innerHTML='<div style="text-align:center;color:#64748B;padding:30px;background:#0F172A;border-radius:8px">لا توجد بيانات فى الفترة المختارة.</div>';
     return;
   }
+  /* Skip rebuild if content hash unchanged (saves DOM thrash) */
+  var hashParts=[];
+  Object.keys(tree).forEach(function(k){
+    var c=tree[k];hashParts.push(k+':'+c.stats.maps+','+c.stats.wa+','+c.stats.phone+','+Object.keys(c.adsets).join(','));
+  });
+  var newHash=pFilter+'|'+cFilter+'|'+hashParts.sort().join(';');
+  if(newHash===FUNNEL_LAST_HASH && container.children.length>0)return;
+  FUNNEL_LAST_HASH=newHash;
   var camps=Object.keys(tree).map(function(k){
     var c=tree[k];return{key:k,platform:c.platform,campaign:c.campaign,
       adsets:c.adsets,r:finalizeStats(c.stats)};
