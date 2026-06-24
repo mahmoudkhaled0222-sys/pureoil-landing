@@ -1685,6 +1685,7 @@ var TRAFFIC_SOURCE=(function(){
   var utm_source=params.get('utm_source')||'';
   var utm_medium=params.get('utm_medium')||'';
   var utm_campaign=params.get('utm_campaign')||'';
+  var utm_term=params.get('utm_term')||'';
   var utm_content=params.get('utm_content')||'';
   var ref=document.referrer||'';
   var platform='direct';
@@ -1710,7 +1711,7 @@ var TRAFFIC_SOURCE=(function(){
     else if(r.indexOf('bing.')>-1)platform='bing';
     else platform='referral';
   }
-  var src={platform:platform,utm_source:utm_source,utm_medium:utm_medium,utm_campaign:utm_campaign,utm_content:utm_content,ref:ref};
+  var src={platform:platform,utm_source:utm_source,utm_medium:utm_medium,utm_campaign:utm_campaign,utm_term:utm_term,utm_content:utm_content,ref:ref};
   sessionStorage.setItem(k,JSON.stringify(src));
   return src;
 })();
@@ -1726,6 +1727,7 @@ function sendToBackend(category,action,label){
       utm_source:TRAFFIC_SOURCE.utm_source,
       utm_medium:TRAFFIC_SOURCE.utm_medium,
       utm_campaign:TRAFFIC_SOURCE.utm_campaign,
+      utm_term:TRAFFIC_SOURCE.utm_term,
       utm_content:TRAFFIC_SOURCE.utm_content,
       ua:navigator.userAgent,lang:navigator.language,
       w:screen.width,h:screen.height

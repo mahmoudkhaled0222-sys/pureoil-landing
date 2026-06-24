@@ -257,12 +257,47 @@ footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-si
       </div>
     </div>
 
-    <!-- UTM Campaign breakdown -->
-    <div class="card" style="margin-bottom:16px">
-      <h2>🎯 أداء الحملات الإعلانية (UTM Campaigns) <span class="count" id="campCount"></span></h2>
-      <div class="scroll-tbl">
-        <table>
-          <thead><tr><th>الحملة</th><th>المنصة</th><th style="text-align:center">جلسات</th><th style="text-align:center">واتساب</th><th style="text-align:center">اتصالات</th><th style="text-align:center">CTR</th></tr></thead>
+    <!-- ⭐ FUNNEL — Platform → Campaign → Adset → Ad → Actions -->
+    <div class="card" style="margin-bottom:16px;border:2px solid #F5C518">
+      <h2>🎯 تحليل الحملات الشامل — كل زائر جا منين وعمل اى <span class="count" id="campCount"></span></h2>
+      <p style="color:#94A3B8;font-size:12px;margin-bottom:10px">
+        كل صف بيقولك: <b style="color:#F5C518">المنصة + الحملة + الادسيت (utm_term = الفرع) + الإعلان (utm_content)</b> — وعدد الجلسات والأكشنز اللى عملوها (موقع/واتس/اتصال/متجر/FAQ).
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+        <label style="color:#94A3B8;font-size:12px">فلتر المنصة:</label>
+        <select id="funnelPlatformFilter" style="background:#0F172A;color:#fff;border:1px solid #334155;padding:6px 10px;border-radius:6px;font-size:12px">
+          <option value="">كل المنصات</option>
+        </select>
+        <label style="color:#94A3B8;font-size:12px;margin-right:12px">فلتر الحملة:</label>
+        <select id="funnelCampaignFilter" style="background:#0F172A;color:#fff;border:1px solid #334155;padding:6px 10px;border-radius:6px;font-size:12px">
+          <option value="">كل الحملات</option>
+        </select>
+        <label style="color:#94A3B8;font-size:12px;margin-right:12px">المستوى:</label>
+        <select id="funnelLevel" style="background:#0F172A;color:#fff;border:1px solid #334155;padding:6px 10px;border-radius:6px;font-size:12px">
+          <option value="full">تفصيلي كامل (إعلان × ادسيت)</option>
+          <option value="adset">ادسيت (utm_term) — مجموع</option>
+          <option value="campaign">حملة — مجموع</option>
+          <option value="platform">منصة فقط — مجموع</option>
+        </select>
+      </div>
+      <div class="scroll-tbl" style="max-height:600px">
+        <table style="font-size:12px">
+          <thead style="position:sticky;top:0;background:#0F172A;z-index:2">
+            <tr>
+              <th>المنصة</th>
+              <th>الحملة</th>
+              <th>الادسيت (الفرع)</th>
+              <th>الإعلان</th>
+              <th style="text-align:center">جلسات</th>
+              <th style="text-align:center" title="ضغط على الموقع/Maps">🗺️</th>
+              <th style="text-align:center" title="واتساب">💬</th>
+              <th style="text-align:center" title="مكالمة">📞</th>
+              <th style="text-align:center" title="متجر">🛒</th>
+              <th style="text-align:center" title="FAQ">❓</th>
+              <th style="text-align:center">إجمالى أكشن</th>
+              <th style="text-align:center">CTR</th>
+            </tr>
+          </thead>
           <tbody id="campTbl"></tbody>
         </table>
       </div>
@@ -604,35 +639,111 @@ function renderPlatforms(events){
   }).join('');
 }
 
-/* ⭐ UTM Campaigns */
+/* ⭐ FUNNEL — Platform × Campaign × Adset(utm_term) × Ad(utm_content) × Actions */
+var FUNNEL_EVENTS_CACHE=[];
 function renderCampaigns(events){
-  var camps={};
-  /* Group by campaign — only sessions with utm_campaign */
+  FUNNEL_EVENTS_CACHE=events;
+  /* Populate filter dropdowns */
+  var platforms={},campaigns={};
   events.forEach(function(e){
-    if(!e.utm_campaign)return;
-    var k=e.utm_campaign;
-    if(!camps[k])camps[k]={platform:e.platform||'direct',sessions:{},wa:0,phone:0};
-    camps[k].sessions[e.sid]=1;
-    if(e.action==='whatsapp_click')camps[k].wa++;
-    if(e.action==='phone_click')camps[k].phone++;
+    if(e.platform)platforms[e.platform]=1;
+    if(e.utm_campaign)campaigns[e.utm_campaign]=1;
   });
-  var rows=Object.keys(camps).map(function(k){
-    var c=camps[k];var s=Object.keys(c.sessions).length;
-    return{name:k,platform:c.platform,sessions:s,wa:c.wa,phone:c.phone,ctr:s>0?((c.wa+c.phone)/s*100).toFixed(1):0};
+  var pf=document.getElementById('funnelPlatformFilter');
+  var cf=document.getElementById('funnelCampaignFilter');
+  if(pf && pf.options.length<=1){
+    Object.keys(platforms).sort().forEach(function(p){
+      var o=document.createElement('option');o.value=p;o.textContent=PLATFORM_LABELS[p]||p;pf.appendChild(o);
+    });
+    pf.addEventListener('change',drawFunnel);
+  }
+  if(cf){
+    var prevC=cf.value;
+    cf.innerHTML='<option value="">كل الحملات</option>';
+    Object.keys(campaigns).sort().forEach(function(c){
+      var o=document.createElement('option');o.value=c;o.textContent=c;if(c===prevC)o.selected=true;cf.appendChild(o);
+    });
+    if(!cf._bound){cf.addEventListener('change',drawFunnel);cf._bound=true;}
+  }
+  var lvl=document.getElementById('funnelLevel');
+  if(lvl && !lvl._bound){lvl.addEventListener('change',drawFunnel);lvl._bound=true;}
+  drawFunnel();
+}
+
+function drawFunnel(){
+  var events=FUNNEL_EVENTS_CACHE;
+  var pFilter=(document.getElementById('funnelPlatformFilter')||{}).value||'';
+  var cFilter=(document.getElementById('funnelCampaignFilter')||{}).value||'';
+  var level=(document.getElementById('funnelLevel')||{}).value||'full';
+
+  /* Apply filters */
+  var filtered=events.filter(function(e){
+    if(pFilter && (e.platform||'direct')!==pFilter)return false;
+    if(cFilter && (e.utm_campaign||'')!==cFilter)return false;
+    return true;
+  });
+
+  /* Build grouping key based on level */
+  function keyFor(e){
+    var plat=e.platform||'direct';
+    var camp=e.utm_campaign||'(بدون حملة)';
+    var term=e.utm_term||'(بدون ادسيت)';
+    var cont=e.utm_content||'(بدون إعلان)';
+    if(level==='platform')return JSON.stringify([plat,'—','—','—']);
+    if(level==='campaign')return JSON.stringify([plat,camp,'—','—']);
+    if(level==='adset')return JSON.stringify([plat,camp,term,'—']);
+    return JSON.stringify([plat,camp,term,cont]);
+  }
+
+  var groups={};
+  filtered.forEach(function(e){
+    var k=keyFor(e);
+    if(!groups[k]){
+      var parts=JSON.parse(k);
+      groups[k]={platform:parts[0],campaign:parts[1],term:parts[2],content:parts[3],
+        sessions:{},maps:0,wa:0,phone:0,shop:0,faq:0};
+    }
+    var g=groups[k];
+    g.sessions[e.sid]=1;
+    var a=e.action||'',c=e.category||'';
+    if(a.indexOf('branch_maps')>-1||a==='maps_click'||a==='location_click')g.maps++;
+    if(a==='whatsapp_click'||a.indexOf('branch_whatsapp')>-1||a==='whatsapp')g.wa++;
+    if(a==='phone_click'||a.indexOf('branch_phone')>-1||a==='call')g.phone++;
+    if(a==='shop_click'||c==='shop')g.shop++;
+    if(a==='faq_click'||c==='faq')g.faq++;
+  });
+
+  var rows=Object.keys(groups).map(function(k){
+    var g=groups[k];var s=Object.keys(g.sessions).length;
+    var tot=g.maps+g.wa+g.phone+g.shop+g.faq;
+    return{platform:g.platform,campaign:g.campaign,term:g.term,content:g.content,
+      sessions:s,maps:g.maps,wa:g.wa,phone:g.phone,shop:g.shop,faq:g.faq,
+      total:tot,ctr:s>0?(tot/s*100).toFixed(1):0};
   }).sort(function(a,b){return b.sessions-a.sessions});
-  document.getElementById('campCount').textContent=rows.length+' حملة';
+
+  document.getElementById('campCount').textContent=rows.length+' صف';
   if(rows.length===0){
-    document.getElementById('campTbl').innerHTML='<tr><td colspan="6" style="text-align:center;color:#64748B;padding:20px">لا توجد حملات بـ UTM بعد. ضيف <code style="background:#0F172A;padding:2px 6px;border-radius:4px;color:#F5C518">?utm_source=facebook&utm_campaign=summer_sale</code> فى نهاية رابط الإعلان.</td></tr>';
+    document.getElementById('campTbl').innerHTML='<tr><td colspan="12" style="text-align:center;color:#64748B;padding:20px">لا توجد بيانات. ضيف فى رابط الإعلان: <code style="background:#0F172A;padding:2px 6px;border-radius:4px;color:#F5C518">?utm_source=facebook&utm_campaign=summer&utm_term=branch_nazim&utm_content=video_30s</code></td></tr>';
     return;
   }
   document.getElementById('campTbl').innerHTML=rows.map(function(r){
+    var pColor=PLATFORM_COLORS[r.platform]||'#94A3B8';
+    var pLabel=PLATFORM_LABELS[r.platform]||r.platform;
+    var ctrColor=r.ctr>5?'#10B981':r.ctr>2?'#F5C518':'#EF4444';
+    function num(v,col){return '<td style="text-align:center;color:'+(v>0?col:'#475569')+';font-weight:700">'+v+'</td>';}
     return '<tr>'+
-      '<td style="font-weight:600;color:#fff">'+r.name+'</td>'+
-      '<td><span class="tag" style="background:'+(PLATFORM_COLORS[r.platform]||'#94A3B8')+'22;color:'+(PLATFORM_COLORS[r.platform]||'#94A3B8')+'">'+(PLATFORM_LABELS[r.platform]||r.platform)+'</span></td>'+
-      '<td style="text-align:center;color:#F5C518;font-weight:700">'+r.sessions+'</td>'+
-      '<td style="text-align:center;color:#10B981;font-weight:700">'+r.wa+'</td>'+
-      '<td style="text-align:center;color:#F97316;font-weight:700">'+r.phone+'</td>'+
-      '<td style="text-align:center;color:'+(r.ctr>5?'#10B981':r.ctr>2?'#F5C518':'#EF4444')+';font-weight:700">'+r.ctr+'%</td>'+
+      '<td><span class="tag" style="background:'+pColor+'22;color:'+pColor+';font-size:11px">'+pLabel+'</span></td>'+
+      '<td style="color:#fff;font-weight:600">'+r.campaign+'</td>'+
+      '<td style="color:#F5C518;font-weight:600">'+r.term+'</td>'+
+      '<td style="color:#94A3B8">'+r.content+'</td>'+
+      '<td style="text-align:center;color:#fff;font-weight:800">'+r.sessions+'</td>'+
+      num(r.maps,'#3B82F6')+
+      num(r.wa,'#10B981')+
+      num(r.phone,'#F97316')+
+      num(r.shop,'#EC4899')+
+      num(r.faq,'#A855F7')+
+      '<td style="text-align:center;color:#F5C518;font-weight:800">'+r.total+'</td>'+
+      '<td style="text-align:center;color:'+ctrColor+';font-weight:800">'+r.ctr+'%</td>'+
     '</tr>';
   }).join('');
 }

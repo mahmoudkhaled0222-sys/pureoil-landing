@@ -68,7 +68,7 @@ function doPost(e){
       data.sid||'',data.vid||'',
       data.category||'',data.action||'',data.label||'',
       data.page||'',data.ref||'',data.platform||'direct',
-      data.utm_source||'',data.utm_medium||'',data.utm_campaign||'',data.utm_content||'',
+      data.utm_source||'',data.utm_medium||'',data.utm_campaign||'',data.utm_term||'',data.utm_content||'',
       data.ua||'',data.lang||'',data.w||'',data.h||''
     ]);
     return jsonResponse({ok:true});
@@ -95,8 +95,8 @@ function doGet(e){
       ts:r[0] instanceof Date?r[0].toISOString():r[0],
       sid:r[1],vid:r[2],category:r[3],action:r[4],label:r[5],
       page:r[6],ref:r[7],platform:r[8]||'direct',
-      utm_source:r[9],utm_medium:r[10],utm_campaign:r[11],utm_content:r[12],
-      ua:r[13],lang:r[14],w:r[15],h:r[16]
+      utm_source:r[9],utm_medium:r[10],utm_campaign:r[11],utm_term:r[12],utm_content:r[13],
+      ua:r[14],lang:r[15],w:r[16],h:r[17]
     });
   }
   return jsonResponse({events:events});
@@ -109,7 +109,7 @@ function jsonResponse(obj){
 
 function initSheet(ss){
   var sh=ss.insertSheet(SHEET_NAME);
-  sh.appendRow(['timestamp','session_id','visitor_id','category','action','label','page','referrer','platform','utm_source','utm_medium','utm_campaign','utm_content','user_agent','language','screen_w','screen_h']);
+  sh.appendRow(['timestamp','session_id','visitor_id','category','action','label','page','referrer','platform','utm_source','utm_medium','utm_campaign','utm_term','utm_content','user_agent','language','screen_w','screen_h']);
   sh.setFrozenRows(1);
   return sh;
 }
