@@ -203,7 +203,8 @@ footer.foot{margin-top:30px;padding:20px;text-align:center;color:#64748B;font-si
         </div>
       </div>
       <div class="card">
-        <h2>📍 الفروع (إجمالى التفاعلات) <span class="count" id="brCount"></span></h2>
+        <h2>📍 تفاعلات الفروع (موقع + واتس + اتصال) <span class="count" id="brCount"></span></h2>
+        <p style="color:#94A3B8;font-size:11px;margin-bottom:8px">عدد المرات اللى كل فرع اتضغط عليه (موقع/واتساب/اتصال).</p>
         <div class="scroll-tbl">
           <table><thead><tr><th>الفرع</th><th>تفاعلات</th></tr></thead><tbody id="brTbl"></tbody></table>
         </div>
@@ -459,9 +460,10 @@ document.getElementById('refreshBtn').addEventListener('click',loadData);
 document.getElementById('rangeSel').addEventListener('change',function(){
   var custom=this.value==='custom';
   document.getElementById('customRangeWrap').style.display=custom?'inline-flex':'none';
+  resetFunnelGuard();
   if(!custom)render();
 });
-document.getElementById('applyRange').addEventListener('click',render);
+document.getElementById('applyRange').addEventListener('click',function(){resetFunnelGuard();render();});
 /* Set default dates to last 7 days */
 (function(){
   var to=new Date(),from=new Date(Date.now()-7*86400000);
@@ -569,11 +571,16 @@ function render(){
 
 /* ⭐ Master Branches Table — the most important table */
 function renderBranchMaster(events){
-  var br=events.filter(function(e){return e.category==='branches'});
+  /* Real branch clicks only — exclude region_tab_click (الرياض / باقي المملكة) */
+  var br=events.filter(function(e){
+    if(e.category!=='branches')return false;
+    var a=e.action||'';
+    return a==='branch_maps_click'||a==='branch_whatsapp_click'||a==='branch_phone_click';
+  });
   document.getElementById('branchMasterCount').textContent=br.length+' تفاعل';
   var data={};
   br.forEach(function(e){
-    var name=e.label||'غير محدد';
+    var name=(e.label||'غير محدد').replace(/^📍\s*/,'').trim();
     if(!data[name])data[name]={maps:0,whatsapp:0,phone:0};
     if(e.action.indexOf('maps')>-1)data[name].maps++;
     else if(e.action.indexOf('whatsapp')>-1)data[name].whatsapp++;
@@ -602,13 +609,16 @@ function renderBranchMaster(events){
 /* ⭐ Daily branches trend */
 function renderBranchDaily(events){
   var days=document.getElementById('rangeSel').value;
-  var numDays=days==='all'?30:Math.min(parseInt(days),30);
+  var numDays;
+  if(days==='all'||days==='custom')numDays=30;
+  else numDays=Math.min(parseInt(days),30);
   var now=new Date();now.setHours(0,0,0,0);
   var labels=[],maps=[],wa=[],phone=[];
+  function isBranchClick(a){return a==='branch_maps_click'||a==='branch_whatsapp_click'||a==='branch_phone_click';}
   for(var i=numDays-1;i>=0;i--){
     var d=new Date(now);d.setDate(d.getDate()-i);
     var next=new Date(d);next.setDate(next.getDate()+1);
-    var day=events.filter(function(e){var t=new Date(e.ts);return t>=d&&t<next&&e.category==='branches'});
+    var day=events.filter(function(e){var t=new Date(e.ts);return t>=d&&t<next&&e.category==='branches'&&isBranchClick(e.action||'')});
     labels.push(d.toLocaleDateString('ar-EG',{month:'short',day:'numeric'}));
     maps.push(day.filter(function(e){return e.action.indexOf('maps')>-1}).length);
     wa.push(day.filter(function(e){return e.action.indexOf('whatsapp')>-1}).length);
@@ -715,22 +725,25 @@ var FUNNEL_OPEN_STATE={camps:{},adsets:{}}; /* persists open/close across re-ren
 var FUNNEL_LAST_INTERACTION=0; /* timestamp of last user interaction with funnel */
 var FUNNEL_LAST_HASH=''; /* cache: skip rebuild if data unchanged */
 function markFunnelInteraction(){FUNNEL_LAST_INTERACTION=Date.now();}
-/* Pause auto-rebuild for 20s after any interaction in the funnel section */
+/* Pause auto-rebuild for 8s after CLICK interactions only (not mouse hover) */
 document.addEventListener('DOMContentLoaded',function(){
   setTimeout(function(){
     var sec=document.querySelector('#funnelAccordion');
     if(!sec)return;
-    /* Catch any user interaction inside funnel area */
-    ['mousedown','click','change','focus','mousemove'].forEach(function(ev){
-      var card=document.querySelector('#funnelAccordion').closest('.card');
-      if(card)card.addEventListener(ev,markFunnelInteraction,true);
+    var card=sec.closest('.card');
+    if(!card)return;
+    /* Only real interactions: click + dropdown change. NOT mousemove/focus. */
+    ['mousedown','change'].forEach(function(ev){
+      card.addEventListener(ev,markFunnelInteraction,true);
     });
   },1000);
 });
+/* Reset interaction guard whenever date range changes (forces fresh render) */
+function resetFunnelGuard(){FUNNEL_LAST_INTERACTION=0;FUNNEL_LAST_HASH='';}
 function renderCampaigns(events){
   FUNNEL_EVENTS_CACHE=events;
-  /* If user interacted within last 20s — skip rebuild entirely */
-  if(Date.now()-FUNNEL_LAST_INTERACTION<20000 && document.getElementById('funnelAccordion').children.length>0){
+  /* If user clicked within last 8s — skip rebuild entirely (prevents dropdown from closing mid-use) */
+  if(Date.now()-FUNNEL_LAST_INTERACTION<8000 && document.getElementById('funnelAccordion').children.length>0){
     return;
   }
   /* Populate filter dropdowns — only if options actually changed */
@@ -1012,7 +1025,7 @@ function renderKPIs(events){
   var sessions=uniq(events.map(function(e){return e.sid})).length;
   var wa=events.filter(function(e){return e.action==='whatsapp_click'}).length;
   var phone=events.filter(function(e){return e.action==='phone_click'}).length;
-  var branches=events.filter(function(e){return e.category==='branches'}).length;
+  var branches=events.filter(function(e){var a=e.action||'';return e.category==='branches'&&(a==='branch_maps_click'||a==='branch_whatsapp_click'||a==='branch_phone_click')}).length;
   var shop=events.filter(function(e){return e.action==='shop_click'}).length;
   var ctaClicks=events.filter(function(e){return e.category==='cta'}).length;
   var totalEvents=events.length;
@@ -1037,7 +1050,9 @@ function renderKPIs(events){
 
 function renderVisitsChart(events){
   var days=document.getElementById('rangeSel').value;
-  var numDays=days==='all'?30:Math.min(parseInt(days),60);
+  var numDays;
+  if(days==='all'||days==='custom')numDays=30;
+  else numDays=Math.min(parseInt(days),60);
   var now=new Date();now.setHours(0,0,0,0);
   var labels=[],dataVisits=[],dataVisitors=[];
   for(var i=numDays-1;i>=0;i--){
@@ -1099,7 +1114,16 @@ function renderPhone(events){
   });
 }
 function renderBranches(events){
-  fillTable('brTbl','brCount',events,function(e){return e.category==='branches'},function(e){return e.label||'غير محدد'});
+  /* Only real branch interactions (maps/whatsapp/phone clicks).
+     Exclude region tab clicks (الرياض / باقي المملكة) — those are nav, not branch visits. */
+  fillTable('brTbl','brCount',events,
+    function(e){
+      if(e.category!=='branches')return false;
+      var a=e.action||'';
+      return a==='branch_maps_click'||a==='branch_whatsapp_click'||a==='branch_phone_click';
+    },
+    function(e){return (e.label||'غير محدد').replace(/^📍\s*/,'').trim();}
+  );
 }
 function renderShop(events){
   fillTable('shopTbl','shopCount',events,function(e){return e.action==='shop_click'},function(e){return e.label||'غير محدد'});
