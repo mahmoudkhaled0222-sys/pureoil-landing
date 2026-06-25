@@ -9,7 +9,7 @@ const FRANCHISE_SHEET='franchise_leads';
 
 /* === EMAIL CONFIG === */
 /* غيّر السطر ده للإيميل الرسمى الصحيح لو مختلف */
-const NOTIFY_EMAILS=['info@pureoil.sa'];
+const NOTIFY_EMAILS=['ceo@pureoil.sa'];
 
 function doPost(e){
   try{
