@@ -1106,12 +1106,26 @@ function fillTable(tbodyId,countId,events,filterFn,labelFn){
 }
 
 function renderWhatsApp(events){
-  fillTable('waTbl','waCount',events,function(e){return e.action==='whatsapp_click'},function(e){return (e.label||'').replace('whatsapp_','')||'غير محدد'});
+  /* All WhatsApp clicks: generic + branch-specific */
+  fillTable('waTbl','waCount',events,
+    function(e){var a=e.action||'';return a==='whatsapp_click'||a==='branch_whatsapp_click'},
+    function(e){
+      var a=e.action||'',lbl=(e.label||'').toString();
+      if(a==='branch_whatsapp_click')return lbl.replace(/^📍\s*/,'').trim()||'فرع غير محدد';
+      return lbl.replace('whatsapp_','')||'عام';
+    }
+  );
 }
 function renderPhone(events){
-  fillTable('phTbl','phCount',events,function(e){return e.action==='phone_click'},function(e){
-    var m=(e.label||'').match(/call_(\d+)/);return m?m[1]:'غير محدد';
-  });
+  /* All phone calls: generic + branch-specific */
+  fillTable('phTbl','phCount',events,
+    function(e){var a=e.action||'';return a==='phone_click'||a==='branch_phone_click'},
+    function(e){
+      var a=e.action||'',lbl=(e.label||'').toString();
+      if(a==='branch_phone_click')return lbl.replace(/^📍\s*/,'').trim()||'فرع غير محدد';
+      var m=lbl.match(/call_(\d+)/);return m?m[1]:'عام';
+    }
+  );
 }
 function renderBranches(events){
   /* Only real branch interactions (maps/whatsapp/phone clicks).
