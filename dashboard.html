@@ -982,8 +982,8 @@ document.addEventListener('click',function(ev){
 function renderCTR(events){
   var visitors=uniq(events.map(function(e){return e.vid})).length;
   var actions={
-    'ضغط واتساب':events.filter(function(e){return e.action==='whatsapp_click'}).length,
-    'مكالمة تليفون':events.filter(function(e){return e.action==='phone_click'}).length,
+    'ضغط واتساب':events.filter(function(e){var a=e.action||'';return a==='whatsapp_click'||a==='branch_whatsapp_click'}).length,
+    'مكالمة تليفون':events.filter(function(e){var a=e.action||'';return a==='phone_click'||a==='branch_phone_click'}).length,
     'تفاعل فروع (موقع)':events.filter(function(e){return e.action.indexOf('branch_maps')>-1}).length,
     'تفاعل فروع (واتس)':events.filter(function(e){return e.action.indexOf('branch_whatsapp')>-1}).length,
     'تفاعل فروع (اتصال)':events.filter(function(e){return e.action.indexOf('branch_phone')>-1}).length,
@@ -995,8 +995,8 @@ function renderCTR(events){
   var rows=Object.keys(actions).map(function(k){
     var clicks=actions[k];
     var clickers=uniq(events.filter(function(e){
-      if(k==='ضغط واتساب')return e.action==='whatsapp_click';
-      if(k==='مكالمة تليفون')return e.action==='phone_click';
+      if(k==='ضغط واتساب')return e.action==='whatsapp_click'||e.action==='branch_whatsapp_click';
+      if(k==='مكالمة تليفون')return e.action==='phone_click'||e.action==='branch_phone_click';
       return false;
     }).map(function(e){return e.vid})).length;
     var unique=clickers||clicks;
@@ -1023,8 +1023,8 @@ function renderKPIs(events){
   var pageviews=events.filter(function(e){return e.action==='pageview'}).length;
   var visitors=uniq(events.map(function(e){return e.vid})).length;
   var sessions=uniq(events.map(function(e){return e.sid})).length;
-  var wa=events.filter(function(e){return e.action==='whatsapp_click'}).length;
-  var phone=events.filter(function(e){return e.action==='phone_click'}).length;
+  var wa=events.filter(function(e){var a=e.action||'';return a==='whatsapp_click'||a==='branch_whatsapp_click'}).length;
+  var phone=events.filter(function(e){var a=e.action||'';return a==='phone_click'||a==='branch_phone_click'}).length;
   var branches=events.filter(function(e){var a=e.action||'';return e.category==='branches'&&(a==='branch_maps_click'||a==='branch_whatsapp_click'||a==='branch_phone_click')}).length;
   var shop=events.filter(function(e){return e.action==='shop_click'}).length;
   var ctaClicks=events.filter(function(e){return e.category==='cta'}).length;
