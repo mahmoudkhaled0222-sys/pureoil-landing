@@ -1,14 +1,16 @@
 /* ============================================================
-   Google Apps Script — Pure Oil Analytics Backend (v3)
-   v3: Adds franchise lead → email notification
-   انسخ كل الكود ده وحطه فى script.google.com
+   Google Apps Script — Pure Oil Analytics Backend (v5)
+   v5: DATA SAFETY — كل حدث يتسجّل فى شيتين:
+       1) events (الأساسى — ممكن المستخدم يمسحه عن طريق الخطأ)
+       2) events_archive (نسخة احتياطية — مفروض ما تنمسحش أبداً)
+       لو events فاضى أو ناقص، الداش بورد بتقرأ من الـ archive.
    ============================================================ */
 
 const SHEET_NAME='events';
+const ARCHIVE_SHEET='events_archive'; /* النسخة الاحتياطية — لا تمسحه أبداً! */
 const FRANCHISE_SHEET='franchise_leads';
 
 /* === EMAIL CONFIG === */
-/* غيّر السطر ده للإيميل الرسمى الصحيح لو مختلف */
 const NOTIFY_EMAILS=['ceo@pureoil.sa'];
 
 function doPost(e){
@@ -30,8 +32,7 @@ function doPost(e){
         data.platform||'direct',
         data.ref||''
       ]);
-      /* Send email notification */
-      var subject='🎯 طلب امتياز تجاري جديد — '+(data.franchise_name||'بدون اسم');
+      var subject='طلب امتياز تجاري جديد - '+(data.franchise_name||'بدون اسم');
       var body=
         '<div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right">'+
         '<h2 style="color:#D4A017">طلب امتياز تجاري جديد</h2>'+
@@ -54,23 +55,27 @@ function doPost(e){
           htmlBody:body,
           replyTo:data.franchise_email||''
         });
-      }catch(em){
-        /* Log mail error but don't fail the request */
-        Logger.log('Mail error: '+em);
-      }
+      }catch(em){Logger.log('Mail error: '+em);}
       return jsonResponse({ok:true,type:'franchise'});
     }
 
-    /* ===== REGULAR EVENT ===== */
-    var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss);
-    sh.appendRow([
+    /* ===== REGULAR EVENT — يتكتب فى شيتين ===== */
+    var rowData=[
       data.ts||new Date().toISOString(),
       data.sid||'',data.vid||'',
       data.category||'',data.action||'',data.label||'',
       data.page||'',data.ref||'',data.platform||'direct',
       data.utm_source||'',data.utm_medium||'',data.utm_campaign||'',data.utm_term||'',data.utm_content||'',
       data.ua||'',data.lang||'',data.w||'',data.h||''
-    ]);
+    ];
+    /* 1) Main events sheet */
+    var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss,SHEET_NAME);
+    sh.appendRow(rowData);
+    /* 2) Backup archive sheet — protected copy */
+    try{
+      var ash=ss.getSheetByName(ARCHIVE_SHEET)||initSheet(ss,ARCHIVE_SHEET);
+      ash.appendRow(rowData);
+    }catch(arcErr){Logger.log('Archive error: '+arcErr);}
     return jsonResponse({ok:true});
   }catch(err){
     return jsonResponse({ok:false,err:err.toString()});
@@ -84,8 +89,21 @@ function row(label,value){
 
 function doGet(e){
   var ss=SpreadsheetApp.getActiveSpreadsheet();
-  var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss);
-  var rows=sh.getDataRange().getValues();
+  var sh=ss.getSheetByName(SHEET_NAME);
+  var ash=ss.getSheetByName(ARCHIVE_SHEET);
+  /* Decide which sheet has more data — read from the bigger one */
+  var mainRows=sh?sh.getLastRow():0;
+  var archRows=ash?ash.getLastRow():0;
+  var useSheet=null;
+  if(archRows>mainRows){useSheet=ash;}
+  else if(mainRows>0){useSheet=sh;}
+  else if(archRows>0){useSheet=ash;}
+  else{
+    /* Both empty — initialize main and return empty */
+    initSheet(ss,SHEET_NAME);
+    return jsonResponse({events:[]});
+  }
+  var rows=useSheet.getDataRange().getValues();
   if(rows.length<=1)return jsonResponse({events:[]});
   var events=[];
   var start=Math.max(1,rows.length-10000);
@@ -99,7 +117,7 @@ function doGet(e){
       ua:r[14],lang:r[15],w:r[16],h:r[17]
     });
   }
-  return jsonResponse({events:events});
+  return jsonResponse({events:events,source:useSheet.getName(),count:events.length});
 }
 
 function jsonResponse(obj){
@@ -107,10 +125,17 @@ function jsonResponse(obj){
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function initSheet(ss){
-  var sh=ss.insertSheet(SHEET_NAME);
+function initSheet(ss,name){
+  var sh=ss.insertSheet(name);
   sh.appendRow(['timestamp','session_id','visitor_id','category','action','label','page','referrer','platform','utm_source','utm_medium','utm_campaign','utm_term','utm_content','user_agent','language','screen_w','screen_h']);
   sh.setFrozenRows(1);
+  /* Protect archive sheet from accidental edits */
+  if(name===ARCHIVE_SHEET){
+    try{
+      var protection=sh.protect().setDescription('Archive — لا تمسح هذا الشيت! نسخة احتياطية تلقائية لكل البيانات.');
+      protection.setWarningOnly(true);
+    }catch(p){Logger.log('Protect error: '+p);}
+  }
   return sh;
 }
 
@@ -119,4 +144,21 @@ function initFranchiseSheet(ss){
   sh.appendRow(['تاريخ','الاسم','الجوال','الإيميل','المدينة','موقع جاهز','الرسالة','المصدر','referrer']);
   sh.setFrozenRows(1);
   return sh;
+}
+
+/* ============================================================
+   استعادة الـ events من النسخة الاحتياطية يدوياً
+   لو شيت events اتمسح بالغلط، شغّل الدالة دى من الـ Apps Script
+   editor (اختار restoreFromArchive ثم اضغط ▶️).
+   ============================================================ */
+function restoreFromArchive(){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var ash=ss.getSheetByName(ARCHIVE_SHEET);
+  if(!ash){Logger.log('No archive found!');return;}
+  /* Delete main if exists, then recreate from archive */
+  var old=ss.getSheetByName(SHEET_NAME);
+  if(old)ss.deleteSheet(old);
+  var newSh=ash.copyTo(ss);
+  newSh.setName(SHEET_NAME);
+  Logger.log('Restored '+ash.getLastRow()+' rows from archive to events sheet.');
 }
