@@ -1748,7 +1748,11 @@ function trackEvent(category, action, label) {
   if(typeof gtag==='function') gtag('event', action, {event_category:category, event_label:label});
   /* Meta */
   if(typeof fbq==='function') {
-    if(action==='whatsapp_click') fbq('track','Contact',{content_name:label});
+    /* Skip Meta for branch_* actions — they fire their own Standard Events below in branch handler */
+    if(action==='branch_maps_click'||action==='branch_whatsapp_click'||action==='branch_phone_click'){
+      /* no-op for Meta — Standard Event already fired by branch handler */
+    }
+    else if(action==='whatsapp_click') fbq('track','Contact',{content_name:label});
     else if(action==='phone_click') fbq('track','Contact',{content_name:label});
     else if(action==='franchise_submit') fbq('track','Lead',{content_name:'Franchise Application'});
     else if(action==='shop_click') fbq('track','ViewContent',{content_name:label});
@@ -1804,6 +1808,18 @@ document.querySelectorAll('.branch-card a').forEach(function(el){
     else if(el.href.indexOf('wa.me')>-1||el.classList.contains('branch-btn-wa'))type='whatsapp';
     else if(el.href.indexOf('tel:')>-1||el.classList.contains('branch-btn-call'))type='phone';
     trackEvent('branches','branch_'+type+'_click',branchName);
+    /* --- Meta Standard Events (so they appear in Ads Manager conversion dropdown) --- */
+    try{
+      if(typeof fbq!=='undefined'){
+        if(type==='maps'){
+          fbq('track','FindLocation',{content_name:branchName,content_category:'branch'});
+        }else if(type==='whatsapp'){
+          fbq('track','Contact',{content_name:branchName,content_category:'whatsapp'});
+        }else if(type==='phone'){
+          fbq('track','Lead',{content_name:branchName,content_category:'phone'});
+        }
+      }
+    }catch(metaErr){}
   });
 });
 
