@@ -186,7 +186,7 @@ function doGet(e){
   var rows=useSheet.getDataRange().getValues();
   if(rows.length<=1)return jsonResponse({events:[]});
   var events=[];
-  var start=Math.max(1,rows.length-10000);
+  var start=Math.max(1,rows.length-100000);
   for(var i=start;i<rows.length;i++){
     var r=rows[i];
     events.push({
