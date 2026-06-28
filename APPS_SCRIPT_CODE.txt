@@ -1,17 +1,32 @@
 /* ============================================================
-   Google Apps Script — Pure Oil Analytics Backend (v5)
-   v5: DATA SAFETY — كل حدث يتسجّل فى شيتين:
-       1) events (الأساسى — ممكن المستخدم يمسحه عن طريق الخطأ)
-       2) events_archive (نسخة احتياطية — مفروض ما تنمسحش أبداً)
-       لو events فاضى أو ناقص، الداش بورد بتقرأ من الـ archive.
+   Google Apps Script — Pure Oil Analytics Backend (v6)
+   v5: DATA SAFETY — كل حدث يتسجّل فى شيتين (events + events_archive)
+   v6: Meta Conversions API (CAPI) — بيبعت الإيفينتات لـ Meta من السيرفر
+       عشان يظهر badge "Conversions API" جنب الإيفينت + يتعدّى iOS tracking
    ============================================================ */
 
 const SHEET_NAME='events';
-const ARCHIVE_SHEET='events_archive'; /* النسخة الاحتياطية — لا تمسحه أبداً! */
+const ARCHIVE_SHEET='events_archive';
 const FRANCHISE_SHEET='franchise_leads';
 
 /* === EMAIL CONFIG === */
 const NOTIFY_EMAILS=['ceo@pureoil.sa'];
+
+/* === META CAPI CONFIG === */
+const META_PIXEL_ID='303740298970082';
+const META_ACCESS_TOKEN='EAAPVkDxMp1cBR0Kh2NSyY1oQzZC6szzyPovc9OG5kL6S56Q6hZAgY4errm86C2HJn4CtyISq1pVDHpm4H34kPZBxmR7cnuzo7AEnu3Omu4BvkMVKZCZALlLlCgYRrSVwyTOFfZBd0E1xxZBLKkGymU10fqJMaqmEHcYmTk9zZA2bIRUnjVjLcguoorENtG7CVgZDZD';
+const META_API_VERSION='v21.0';
+
+/* أي actions من الموقع نبعتها لـ Meta كـ Standard Events */
+const META_EVENT_MAP={
+  'branch_maps_click':'FindLocation',
+  'branch_whatsapp_click':'Contact',
+  'branch_phone_click':'Lead',
+  'whatsapp_click':'Contact',
+  'phone_click':'Contact',
+  'franchise_submit':'Lead',
+  'shop_click':'ViewContent'
+};
 
 function doPost(e){
   try{
@@ -56,10 +71,12 @@ function doPost(e){
           replyTo:data.franchise_email||''
         });
       }catch(em){Logger.log('Mail error: '+em);}
+      /* Send Lead event to Meta CAPI */
+      try{sendToMetaCAPI('Lead',data,data.franchise_email,data.franchise_phone);}catch(cErr){Logger.log('CAPI error: '+cErr);}
       return jsonResponse({ok:true,type:'franchise'});
     }
 
-    /* ===== REGULAR EVENT — يتكتب فى شيتين ===== */
+    /* ===== REGULAR EVENT ===== */
     var rowData=[
       data.ts||new Date().toISOString(),
       data.sid||'',data.vid||'',
@@ -68,18 +85,83 @@ function doPost(e){
       data.utm_source||'',data.utm_medium||'',data.utm_campaign||'',data.utm_term||'',data.utm_content||'',
       data.ua||'',data.lang||'',data.w||'',data.h||''
     ];
-    /* 1) Main events sheet */
     var sh=ss.getSheetByName(SHEET_NAME)||initSheet(ss,SHEET_NAME);
     sh.appendRow(rowData);
-    /* 2) Backup archive sheet — protected copy */
     try{
       var ash=ss.getSheetByName(ARCHIVE_SHEET)||initSheet(ss,ARCHIVE_SHEET);
       ash.appendRow(rowData);
     }catch(arcErr){Logger.log('Archive error: '+arcErr);}
+
+    /* ===== META CAPI — بعت الإيفينت لـ Meta كمان لو فيه mapping ===== */
+    try{
+      var metaEventName=META_EVENT_MAP[data.action];
+      if(metaEventName){
+        sendToMetaCAPI(metaEventName,data,null,null);
+      }
+    }catch(capiErr){Logger.log('CAPI error: '+capiErr);}
+
     return jsonResponse({ok:true});
   }catch(err){
     return jsonResponse({ok:false,err:err.toString()});
   }
+}
+
+/* ============================================================
+   Meta Conversions API sender
+   ============================================================ */
+function sendToMetaCAPI(eventName,data,email,phone){
+  var pixelId=META_PIXEL_ID;
+  var accessToken=META_ACCESS_TOKEN;
+  if(!pixelId||!accessToken){Logger.log('CAPI: missing pixel/token');return;}
+
+  var userData={
+    client_user_agent:data.ua||'',
+    fbp:data.fbp||'',
+    fbc:data.fbc||''
+  };
+  if(email){userData.em=sha256(String(email).toLowerCase().trim());}
+  if(phone){userData.ph=sha256(String(phone).replace(/[^0-9]/g,''));}
+  /* external_id لو موجود (visitor_id) */
+  if(data.vid){userData.external_id=sha256(String(data.vid));}
+
+  var customData={
+    content_name:data.label||'',
+    content_category:data.category||''
+  };
+  if(data.utm_source)customData.utm_source=data.utm_source;
+  if(data.utm_campaign)customData.utm_campaign=data.utm_campaign;
+  if(data.utm_term)customData.utm_term=data.utm_term;
+
+  var eventData={
+    event_name:eventName,
+    event_time:Math.floor(Date.now()/1000),
+    event_source_url:data.page||'https://pureoil.vercel.app/',
+    action_source:'website',
+    event_id:(data.sid||'')+'_'+(data.action||'')+'_'+(data.ts||Date.now()),
+    user_data:userData,
+    custom_data:customData
+  };
+
+  var payload={data:[eventData]};
+  var url='https://graph.facebook.com/'+META_API_VERSION+'/'+pixelId+'/events?access_token='+accessToken;
+  var resp=UrlFetchApp.fetch(url,{
+    method:'post',
+    contentType:'application/json',
+    payload:JSON.stringify(payload),
+    muteHttpExceptions:true
+  });
+  Logger.log('CAPI '+eventName+': '+resp.getResponseCode()+' '+resp.getContentText());
+}
+
+function sha256(input){
+  var bytes=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,input,Utilities.Charset.UTF_8);
+  var hex='';
+  for(var i=0;i<bytes.length;i++){
+    var b=bytes[i];if(b<0)b+=256;
+    var h=b.toString(16);if(h.length===1)h='0'+h;
+    hex+=h;
+  }
+  return hex;
 }
 
 function row(label,value){
@@ -91,7 +173,6 @@ function doGet(e){
   var ss=SpreadsheetApp.getActiveSpreadsheet();
   var sh=ss.getSheetByName(SHEET_NAME);
   var ash=ss.getSheetByName(ARCHIVE_SHEET);
-  /* Decide which sheet has more data — read from the bigger one */
   var mainRows=sh?sh.getLastRow():0;
   var archRows=ash?ash.getLastRow():0;
   var useSheet=null;
@@ -99,7 +180,6 @@ function doGet(e){
   else if(mainRows>0){useSheet=sh;}
   else if(archRows>0){useSheet=ash;}
   else{
-    /* Both empty — initialize main and return empty */
     initSheet(ss,SHEET_NAME);
     return jsonResponse({events:[]});
   }
@@ -129,7 +209,6 @@ function initSheet(ss,name){
   var sh=ss.insertSheet(name);
   sh.appendRow(['timestamp','session_id','visitor_id','category','action','label','page','referrer','platform','utm_source','utm_medium','utm_campaign','utm_term','utm_content','user_agent','language','screen_w','screen_h']);
   sh.setFrozenRows(1);
-  /* Protect archive sheet from accidental edits */
   if(name===ARCHIVE_SHEET){
     try{
       var protection=sh.protect().setDescription('Archive — لا تمسح هذا الشيت! نسخة احتياطية تلقائية لكل البيانات.');
@@ -148,17 +227,30 @@ function initFranchiseSheet(ss){
 
 /* ============================================================
    استعادة الـ events من النسخة الاحتياطية يدوياً
-   لو شيت events اتمسح بالغلط، شغّل الدالة دى من الـ Apps Script
-   editor (اختار restoreFromArchive ثم اضغط ▶️).
    ============================================================ */
 function restoreFromArchive(){
   var ss=SpreadsheetApp.getActiveSpreadsheet();
   var ash=ss.getSheetByName(ARCHIVE_SHEET);
   if(!ash){Logger.log('No archive found!');return;}
-  /* Delete main if exists, then recreate from archive */
   var old=ss.getSheetByName(SHEET_NAME);
   if(old)ss.deleteSheet(old);
   var newSh=ash.copyTo(ss);
   newSh.setName(SHEET_NAME);
   Logger.log('Restored '+ash.getLastRow()+' rows from archive to events sheet.');
+}
+
+/* ============================================================
+   اختبار CAPI يدوياً — شغّل ده مرة عشان تتأكد التوكين شغّال
+   ============================================================ */
+function testCAPI(){
+  sendToMetaCAPI('FindLocation',{
+    action:'branch_maps_click',
+    label:'الملز (test)',
+    category:'branches',
+    page:'https://pureoil.vercel.app/',
+    sid:'test_sid_'+Date.now(),
+    vid:'test_vid',
+    ua:'Mozilla/5.0 (Test)',
+    ts:new Date().toISOString()
+  },null,null);
 }
