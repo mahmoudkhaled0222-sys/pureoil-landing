@@ -529,6 +529,8 @@ function generateDemoData(){
 }
 
 /* ============ FILTERING ============ */
+/* ============ EGYPT TIMEZONE (UTC+2) — fixed so dates always count by Cairo day ============ */
+var EGYPT_OFFSET_MS=2*60*60*1000; /* UTC+2 */
 function getFiltered(){
   var v=document.getElementById('rangeSel').value;
   if(v==='all')return ALL_EVENTS;
@@ -536,8 +538,10 @@ function getFiltered(){
     var from=document.getElementById('dateFrom').value;
     var to=document.getElementById('dateTo').value;
     if(!from && !to)return ALL_EVENTS;
-    var fromT=from?new Date(from+'T00:00:00').getTime():0;
-    var toT=to?new Date(to+'T23:59:59').getTime():Date.now();
+    /* Parse date as Egypt time:
+       user picks "2026-06-28" => Egypt 00:00 => UTC = (2026-06-28 00:00) - 2h */
+    var fromT=from?(Date.UTC(parseInt(from.slice(0,4)),parseInt(from.slice(5,7))-1,parseInt(from.slice(8,10)),0,0,0)-EGYPT_OFFSET_MS):0;
+    var toT=to?(Date.UTC(parseInt(to.slice(0,4)),parseInt(to.slice(5,7))-1,parseInt(to.slice(8,10)),23,59,59)-EGYPT_OFFSET_MS):Date.now();
     return ALL_EVENTS.filter(function(e){var t=new Date(e.ts).getTime();return t>=fromT && t<=toT});
   }
   var cutoff=Date.now()-parseInt(v)*86400000;
