@@ -417,7 +417,7 @@ async function loadData(){
   for(var attempt=0;attempt<3;attempt++){
     try{
       var ctrl=new AbortController();
-      var timer=setTimeout(function(){ctrl.abort();},15000);
+      var timer=setTimeout(function(){ctrl.abort();},60000);
       var res=await fetch(DASHBOARD_ENDPOINT+'?action=list&t='+Date.now(),{signal:ctrl.signal});
       clearTimeout(timer);
       if(!res.ok)throw new Error('HTTP '+res.status);
