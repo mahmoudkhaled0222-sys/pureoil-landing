@@ -1,8 +1,9 @@
 /* ============================================================
-   Google Apps Script — Pure Oil Analytics Backend (v6)
+   Google Apps Script — Pure Oil Analytics Backend (v7)
    v5: DATA SAFETY — كل حدث يتسجّل فى شيتين (events + events_archive)
    v6: Meta Conversions API (CAPI) — بيبعت الإيفينتات لـ Meta من السيرفر
        عشان يظهر badge "Conversions API" جنب الإيفينت + يتعدّى iOS tracking
+   v7: حقول فرنشايز جديدة (القدرة الاستثمارية، الخبرة التجارية، خطة الافتتاح)
    ============================================================ */
 
 const SHEET_NAME='events';
@@ -43,6 +44,9 @@ function doPost(e){
         data.franchise_email||'',
         data.franchise_city||'',
         data.franchise_haslocation||'',
+        data.franchise_investment||'',
+        data.franchise_experience||'',
+        data.franchise_timeline||'',
         data.franchise_message||'',
         data.platform||'direct',
         data.ref||''
@@ -57,6 +61,9 @@ function doPost(e){
           row('الإيميل',data.franchise_email)+
           row('المدينة',data.franchise_city)+
           row('موقع جاهز؟',data.franchise_haslocation)+
+          row('القدرة الاستثمارية',data.franchise_investment)+
+          row('خبرة تجارية سابقة',data.franchise_experience)+
+          row('خطة الافتتاح',data.franchise_timeline)+
           row('رسالة',data.franchise_message)+
           row('مصدر الترافيك',data.platform)+
           row('الوقت',new Date().toLocaleString('ar-EG'))+
@@ -220,7 +227,7 @@ function initSheet(ss,name){
 
 function initFranchiseSheet(ss){
   var sh=ss.insertSheet(FRANCHISE_SHEET);
-  sh.appendRow(['تاريخ','الاسم','الجوال','الإيميل','المدينة','موقع جاهز','الرسالة','المصدر','referrer']);
+  sh.appendRow(['تاريخ','الاسم','الجوال','الإيميل','المدينة','موقع جاهز','القدرة الاستثمارية','الخبرة التجارية','خطة الافتتاح','الرسالة','المصدر','referrer']);
   sh.setFrozenRows(1);
   return sh;
 }
