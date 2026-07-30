@@ -489,6 +489,26 @@ textarea.form-control{resize:vertical;min-height:100px}
 .promo-text p{color:var(--gray-text);font-size:clamp(11px,1.3vw,13px);line-height:1.3}
 .promo-text p strong{color:var(--gold-light)}
 @media(max-width:639px){.promo-inner{gap:8px}.promo-icon{font-size:22px}}
+
+/* === CONFERENCE SECTION === */
+.conference{background:linear-gradient(180deg,#0D0D0D 0%,#1A1A1A 100%);color:#fff;overflow:hidden}
+.conf-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch;min-height:520px}
+.conf-gallery{position:relative;overflow:hidden;min-height:400px}
+.conf-gallery img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease}
+.conf-gallery img.active{opacity:1}
+.conf-dots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:2}
+.conf-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:all .3s;border:none}
+.conf-dot.active{background:var(--gold);transform:scale(1.3)}
+.conf-content{display:flex;flex-direction:column;justify-content:center;padding:48px 40px}
+.conf-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:var(--radius-btn);background:rgba(212,160,23,0.15);border:1px solid rgba(212,160,23,0.3);color:var(--gold-light);font-size:13px;font-weight:600;margin-bottom:20px;width:fit-content}
+.conf-title{font-size:clamp(22px,3vw,32px);font-weight:800;line-height:1.4;margin-bottom:16px}
+.conf-title span{color:var(--gold)}
+.conf-desc{color:rgba(255,255,255,.7);font-size:clamp(14px,1.5vw,16px);line-height:1.8;margin-bottom:24px}
+.conf-highlights{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px}
+.conf-tag{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-btn);font-size:13px;color:rgba(255,255,255,.85);font-weight:600}
+.conf-tag svg{flex-shrink:0}
+.conf-year{font-size:13px;color:var(--gold-light);font-weight:600}
+@media(max-width:768px){.conf-grid{grid-template-columns:1fr}.conf-gallery{min-height:280px;order:-1}.conf-content{padding:32px 20px}}
 </style>
 </head>
 <body>
@@ -1110,6 +1130,35 @@ textarea.form-control{resize:vertical;min-height:100px}
   </div>
 </section>
 
+<!-- ===== CONFERENCE ===== -->
+<section class="conference section-padding" id="conference">
+  <div class="container">
+    <div class="conf-grid reveal">
+      <div class="conf-gallery" id="confGallery">
+        <img src="images/conference/conf-1.jpg" alt="مؤتمر الزيت النقي — جلسة العمل" class="active" loading="lazy">
+        <img src="images/conference/conf-2.jpg" alt="مؤتمر الزيت النقي — عرض تقني من KRAFTOL" loading="lazy">
+        <img src="images/conference/conf-3.jpg" alt="مؤتمر الزيت النقي — خبير KRAFTOL الألماني" loading="lazy">
+        <img src="images/conference/conf-4.jpg" alt="مؤتمر الزيت النقي — ورشة عمل مع الشركاء" loading="lazy">
+        <img src="images/conference/conf-5.jpg" alt="مؤتمر الزيت النقي — كلمة المؤسس" loading="lazy">
+        <img src="images/conference/conf-6.jpg" alt="مؤتمر الزيت النقي — نقاش مع الخبراء" loading="lazy">
+        <div class="conf-dots" id="confDots"></div>
+      </div>
+      <div class="conf-content">
+        <span class="conf-badge">🎤 حدث حصري 2026</span>
+        <h2 class="conf-title">مؤتمر الزيت النقي الأول<br>لتقنيات <span>العناية بالمحركات</span></h2>
+        <p class="conf-desc">استضفنا خبراء من ألمانيا في مقرنا بالرياض لنقل أحدث تقنيات صيانة المحركات عالمياً — ورش عمل تطبيقية، عروض حيّة لمنتجات KRAFTOL، وجلسات حوارية مع شركائنا في كل أنحاء المملكة.</p>
+        <div class="conf-highlights">
+          <div class="conf-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>خبراء من ألمانيا</div>
+          <div class="conf-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>ورش عمل تطبيقية</div>
+          <div class="conf-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>شراكات دولية</div>
+          <div class="conf-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>عروض حيّة لـ KRAFTOL</div>
+        </div>
+        <span class="conf-year">📅 الرياض — 2026</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===== TESTIMONIALS ===== -->
 <section class="testimonials section-padding" id="testimonials">
   <div class="container">
@@ -1641,6 +1690,37 @@ let touchStartX=0;
 track.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;clearInterval(autoPlay)},{passive:true});
 track.addEventListener('touchend',e=>{const diff=touchStartX-e.changedTouches[0].clientX;if(Math.abs(diff)>50){if(diff>0)goToSlide(currentSlide+1);else goToSlide(currentSlide-1)}autoPlay=setInterval(()=>goToSlide(currentSlide+1),5000)},{passive:true});
 window.addEventListener('resize',()=>{updateSlidesPerView();buildDots();goToSlide(0)});
+
+/* ===== CONFERENCE GALLERY ===== */
+(function(){
+  var gallery=document.getElementById('confGallery');
+  if(!gallery)return;
+  var imgs=gallery.querySelectorAll('img');
+  var dotsC=document.getElementById('confDots');
+  var cur=0;
+  /* build dots */
+  imgs.forEach(function(_,i){
+    var d=document.createElement('button');
+    d.className='conf-dot'+(i===0?' active':'');
+    d.setAttribute('aria-label','صورة '+(i+1));
+    d.addEventListener('click',function(){goTo(i);});
+    dotsC.appendChild(d);
+  });
+  var dots=dotsC.querySelectorAll('.conf-dot');
+  function goTo(n){
+    imgs[cur].classList.remove('active');
+    dots[cur].classList.remove('active');
+    cur=(n+imgs.length)%imgs.length;
+    imgs[cur].classList.add('active');
+    dots[cur].classList.add('active');
+  }
+  var auto=setInterval(function(){goTo(cur+1);},4000);
+  gallery.addEventListener('click',function(){clearInterval(auto);goTo(cur+1);auto=setInterval(function(){goTo(cur+1);},4000);});
+  /* swipe */
+  var sx=0;
+  gallery.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;clearInterval(auto);},{passive:true});
+  gallery.addEventListener('touchend',function(e){var diff=sx-e.changedTouches[0].clientX;if(Math.abs(diff)>50){diff>0?goTo(cur+1):goTo(cur-1);}auto=setInterval(function(){goTo(cur+1);},4000);},{passive:true});
+})();
 
 /* ===== FAQ ACCORDION ===== */
 document.querySelectorAll('.faq-question').forEach(q=>{
