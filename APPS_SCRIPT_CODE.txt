@@ -247,6 +247,90 @@ function restoreFromArchive(){
 }
 
 /* ============================================================
+   تنظيف البيانات القديمة — شغّل مرة لو الشيت وصل حد الخلايا
+   بيسيب آخر 14 يوم بس ويمسح كل اللي قبل كده
+   ============================================================ */
+function cleanupOldData(){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var cutoff=new Date();
+  cutoff.setDate(cutoff.getDate()-14); /* آخر 14 يوم */
+  Logger.log('Cleanup: keeping data after '+cutoff.toISOString());
+
+  var sheets=[SHEET_NAME, ARCHIVE_SHEET];
+  for(var s=0;s<sheets.length;s++){
+    var sh=ss.getSheetByName(sheets[s]);
+    if(!sh)continue;
+    var lastRow=sh.getLastRow();
+    if(lastRow<=1){Logger.log(sheets[s]+': empty, skipping');continue;}
+    /* Find cutoff row — timestamps in column A */
+    var timestamps=sh.getRange(2,1,lastRow-1,1).getValues();
+    var keepFrom=-1;
+    for(var i=timestamps.length-1;i>=0;i--){
+      var ts=timestamps[i][0];
+      var d=(ts instanceof Date)?ts:new Date(ts);
+      if(d<cutoff){keepFrom=i+1;break;}
+    }
+    if(keepFrom<=0){Logger.log(sheets[s]+': all data is recent, nothing to delete');continue;}
+    /* Delete rows 2 to keepFrom+1 (1-indexed, row 1 is header) */
+    var deleteCount=keepFrom;
+    Logger.log(sheets[s]+': deleting '+deleteCount+' old rows out of '+(lastRow-1));
+    /* Delete in chunks to avoid timeout */
+    while(deleteCount>0){
+      var batch=Math.min(deleteCount,10000);
+      sh.deleteRows(2,batch);
+      deleteCount-=batch;
+      SpreadsheetApp.flush();
+    }
+    Logger.log(sheets[s]+': done. Remaining rows: '+sh.getLastRow());
+  }
+
+  /* Delete conflict sheets */
+  var allSheets=ss.getSheets();
+  for(var j=0;j<allSheets.length;j++){
+    var name=allSheets[j].getName();
+    if(name.indexOf('conflict')>-1){
+      Logger.log('Deleting conflict sheet: '+name);
+      ss.deleteSheet(allSheets[j]);
+    }
+  }
+
+  Logger.log('✅ Cleanup complete! Cell count should be well under limit now.');
+}
+
+/* ============================================================
+   تنظيف تلقائي — ضيف ده كـ Time-driven trigger (أسبوعي)
+   يمسح البيانات الأقدم من 90 يوم أوتوماتيك
+   ============================================================ */
+function autoCleanup(){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var cutoff=new Date();
+  cutoff.setDate(cutoff.getDate()-90);
+
+  var sheets=[SHEET_NAME, ARCHIVE_SHEET];
+  for(var s=0;s<sheets.length;s++){
+    var sh=ss.getSheetByName(sheets[s]);
+    if(!sh)continue;
+    var lastRow=sh.getLastRow();
+    if(lastRow<=1)continue;
+    var timestamps=sh.getRange(2,1,lastRow-1,1).getValues();
+    var keepFrom=-1;
+    for(var i=timestamps.length-1;i>=0;i--){
+      var ts=timestamps[i][0];
+      var d=(ts instanceof Date)?ts:new Date(ts);
+      if(d<cutoff){keepFrom=i+1;break;}
+    }
+    if(keepFrom<=0)continue;
+    var deleteCount=keepFrom;
+    while(deleteCount>0){
+      var batch=Math.min(deleteCount,10000);
+      sh.deleteRows(2,batch);
+      deleteCount-=batch;
+      SpreadsheetApp.flush();
+    }
+  }
+}
+
+/* ============================================================
    اختبار CAPI يدوياً — شغّل ده مرة عشان تتأكد التوكين شغّال
    ============================================================ */
 function testCAPI(){
