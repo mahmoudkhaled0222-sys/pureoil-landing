@@ -1887,11 +1887,16 @@ function trackEvent(category, action, label) {
     else if(action==='shop_click') ttq.track('ViewContent',{content_name:label});
     else ttq.track('ClickButton',{content_name:label});
   }
-  /* Snapchat */
+  /* Snapchat — optimized for Sales/Conversion campaigns */
   if(typeof snaptr==='function') {
-    if(action==='franchise_submit') snaptr('track','SIGN_UP');
-    else if(action==='shop_click') snaptr('track','VIEW_CONTENT');
-    else snaptr('track','CUSTOM_EVENT_1');
+    if(action==='franchise_submit') snaptr('track','SIGN_UP',{description:'franchise_form',sign_up_method:'website'});
+    else if(action==='whatsapp_click'||action==='branch_whatsapp_click') snaptr('track','PURCHASE',{currency:'SAR',price:0,transaction_id:'wa_'+Date.now(),item_category:label||'whatsapp'});
+    else if(action==='phone_click'||action==='branch_phone_click') snaptr('track','PURCHASE',{currency:'SAR',price:0,transaction_id:'call_'+Date.now(),item_category:label||'phone'});
+    else if(action==='branch_maps_click') snaptr('track','ADD_CART',{currency:'SAR',price:0,item_category:label||'maps'});
+    else if(action==='shop_click') snaptr('track','VIEW_CONTENT',{item_category:label||'shop'});
+    else if(action==='cta_click') snaptr('track','ADD_CART',{currency:'SAR',price:0,item_category:label||'cta'});
+    else if(category==='engagement'&&action==='scroll_depth') { /* skip scroll events */ }
+    else snaptr('track','VIEW_CONTENT',{item_category:label||action});
   }
 }
 
