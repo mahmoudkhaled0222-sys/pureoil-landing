@@ -1887,14 +1887,13 @@ function trackEvent(category, action, label) {
     else if(action==='shop_click') ttq.track('ViewContent',{content_name:label});
     else ttq.track('ClickButton',{content_name:label});
   }
-  /* Snapchat — PURCHASE reserved for Salla orders only
-     Landing page uses START_CHECKOUT (branch visit) + ADD_CART (contact intent) */
+  /* Snapchat — PURCHASE = Salla only
+     ADD_CART = branch visit (primary conversion for landing page campaigns)
+     All other actions = VIEW_CONTENT to avoid noise */
   if(typeof snaptr==='function') {
-    if(action==='branch_maps_click') snaptr('track','START_CHECKOUT',{currency:'SAR',price:0,transaction_id:'visit_'+Date.now(),item_category:label||'branch_visit'});
-    else if(action==='whatsapp_click'||action==='branch_whatsapp_click') snaptr('track','ADD_CART',{currency:'SAR',price:0,item_category:label||'whatsapp'});
-    else if(action==='phone_click'||action==='branch_phone_click') snaptr('track','ADD_CART',{currency:'SAR',price:0,item_category:label||'phone'});
+    if(action==='branch_maps_click'||action==='branch_whatsapp_click'||action==='branch_phone_click') snaptr('track','ADD_CART',{currency:'SAR',price:0,item_category:label||'branch_action'});
     else if(action==='franchise_submit') snaptr('track','SIGN_UP',{description:'franchise_form',sign_up_method:'website'});
-    else if(action==='shop_click') snaptr('track','VIEW_CONTENT',{item_category:label||'shop'});
+    else if(action==='whatsapp_click'||action==='phone_click') snaptr('track','ADD_CART',{currency:'SAR',price:0,item_category:label||'contact'});
     else if(category==='engagement'&&action==='scroll_depth') { /* skip */ }
     else snaptr('track','VIEW_CONTENT',{item_category:label||action});
   }
