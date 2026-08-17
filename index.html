@@ -1882,12 +1882,15 @@ function trackEvent(category, action, label) {
     else if(action==='shop_click') fbq('track','ViewContent',{content_name:label});
     else fbq('trackCustom',action,{category:category,label:label});
   }
-  /* TikTok */
+  /* TikTok — CompletePayment = Salla only (real purchases)
+     AddToCart = branch visit actions (primary conversion for landing page campaigns)
+     All other actions = ViewContent to avoid noise */
   if(typeof ttq!=='undefined') {
-    if(action==='whatsapp_click'||action==='phone_click') ttq.track('Contact',{content_name:label});
-    else if(action==='franchise_submit') ttq.track('SubmitForm',{content_name:'Franchise'});
-    else if(action==='shop_click') ttq.track('ViewContent',{content_name:label});
-    else ttq.track('ClickButton',{content_name:label});
+    if(action==='branch_maps_click'||action==='branch_whatsapp_click'||action==='branch_phone_click') ttq.track('AddToCart',{content_name:label||'branch_action',content_type:'product'});
+    else if(action==='franchise_submit') ttq.track('SubmitForm',{content_name:'Franchise',content_type:'product'});
+    else if(action==='whatsapp_click'||action==='phone_click') ttq.track('AddToCart',{content_name:label||'contact',content_type:'product'});
+    else if(category==='engagement'&&action==='scroll_depth') { /* skip */ }
+    else ttq.track('ViewContent',{content_name:label||action,content_type:'product'});
   }
   /* Snapchat — PURCHASE = Salla only
      ADD_CART = branch visit (primary conversion for landing page campaigns)
