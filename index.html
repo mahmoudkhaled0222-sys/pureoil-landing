@@ -1772,7 +1772,7 @@ document.getElementById('franchiseForm').addEventListener('submit',function(e){
     body:JSON.stringify(payload)
   }).catch(function(){});
   /* Also fire tracking pixels */
-  if(typeof trackEvent==='function')trackEvent('franchise','franchise_submit','franchise_form_submitted');
+  if(typeof trackEvent==='function')trackEvent('engagement','franchise_submit','franchise_form_submitted');
   /* Show success popup (always — we used no-cors so we can't read response) */
   setTimeout(function(){
     form.style.display='none';
