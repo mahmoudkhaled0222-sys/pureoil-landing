@@ -509,6 +509,30 @@ textarea.form-control{resize:vertical;min-height:100px}
 .conf-tag svg{flex-shrink:0}
 .conf-year{font-size:13px;color:var(--gold-light);font-weight:600}
 @media(max-width:768px){.conf-grid{grid-template-columns:1fr}.conf-gallery{min-height:280px;order:-1}.conf-content{padding:32px 20px}}
+
+/* Exhibition / IFOE */
+.exhibition{background:linear-gradient(135deg,#0A1628 0%,#1A2744 50%,#0D1B33 100%);color:#fff;overflow:hidden;position:relative}
+.exhibition::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 20%,rgba(212,160,23,0.08) 0%,transparent 60%);pointer-events:none}
+.expo-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch;min-height:500px}
+.expo-visual{position:relative;overflow:hidden}
+.expo-visual img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.expo-visual:hover img{transform:scale(1.03)}
+.expo-badge-live{position:absolute;top:20px;right:20px;background:linear-gradient(135deg,#e53e3e,#c53030);color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;animation:pulse-live 2s infinite;z-index:2}
+@keyframes pulse-live{0%,100%{box-shadow:0 0 0 0 rgba(229,62,62,.5)}50%{box-shadow:0 0 0 10px rgba(229,62,62,0)}}
+.expo-content{display:flex;flex-direction:column;justify-content:center;padding:48px 40px;position:relative;z-index:1}
+.expo-overline{display:inline-block;background:linear-gradient(135deg,var(--gold),#F4D03F);color:#000;font-size:12px;font-weight:800;padding:5px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:1px;text-transform:uppercase;width:fit-content}
+.expo-title{font-size:28px;font-weight:800;line-height:1.4;margin-bottom:12px}
+.expo-title span{color:var(--gold)}
+.expo-subtitle{font-size:15px;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:24px}
+.expo-details{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.expo-detail{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,.85)}
+.expo-detail svg{flex-shrink:0;color:var(--gold)}
+.expo-detail strong{color:#fff}
+.expo-cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--gold),#F4D03F);color:#000;font-size:16px;font-weight:800;padding:14px 32px;border-radius:12px;text-decoration:none;transition:all .3s;box-shadow:0 4px 20px rgba(212,160,23,.3);width:fit-content}
+.expo-cta:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,160,23,.5)}
+.expo-cta svg{transition:transform .3s}
+.expo-cta:hover svg{transform:translateX(-4px)}
+@media(max-width:768px){.expo-grid{grid-template-columns:1fr}.expo-visual{min-height:300px;order:-1}.expo-content{padding:32px 20px}.expo-title{font-size:22px}}
 </style>
 </head>
 <body>
@@ -663,6 +687,41 @@ textarea.form-control{resize:vertical;min-height:100px}
           <div class="conf-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>عروض حيّة لـ KRAFTOL</div>
         </div>
         <span class="conf-year">📅 الرياض — 2026</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== IFOE EXHIBITION ===== -->
+<section class="exhibition section-padding" id="exhibition">
+  <div class="container">
+    <div class="expo-grid reveal">
+      <div class="expo-content">
+        <span class="expo-overline">🏆 IFOE KSA 2026</span>
+        <h2 class="expo-title">الزيت النقي في <span>معرض فرص الامتياز التجاري</span> الدولي</h2>
+        <p class="expo-subtitle">نشارك في النسخة الرابعة من معرض IFOE — أكبر معرض للامتياز التجاري والشراكات الاستثمارية في المملكة. زورنا في جناحنا واكتشف فرصة الامتياز معنا!</p>
+        <div class="expo-details">
+          <div class="expo-detail">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <strong>3 - 5 سبتمبر 2026</strong>
+          </div>
+          <div class="expo-detail">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <strong>4 عصراً - 11 مساءً</strong>
+          </div>
+          <div class="expo-detail">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <strong>مركز جدة للمعارض والفعاليات</strong>
+          </div>
+        </div>
+        <a href="https://maps.app.goo.gl/72WKGhtZ21VpBuaRA" target="_blank" rel="noopener" class="expo-cta">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          📍 وصّلني للمعرض
+        </a>
+      </div>
+      <div class="expo-visual">
+        <span class="expo-badge-live">🔴 هذا الأسبوع!</span>
+        <img src="images/exhibition/booth-1.jpg" alt="جناح الزيت النقي — معرض IFOE 2026" loading="lazy">
       </div>
     </div>
   </div>
