@@ -994,7 +994,8 @@ function renderCTR(events){
     'ضغط متجر':events.filter(function(e){return e.action==='shop_click'}).length,
     'ضغط CTA':events.filter(function(e){return e.category==='cta'}).length,
     'فتح FAQ':events.filter(function(e){return e.action==='faq_click'}).length,
-    'طلب امتياز':events.filter(function(e){return e.action==='franchise_submit'}).length
+    'طلب امتياز':events.filter(function(e){return e.action==='franchise_submit'}).length,
+    '📍 المعرض IFOE':events.filter(function(e){return e.action==='expo_maps_click'}).length
   };
   var rows=Object.keys(actions).map(function(k){
     var clicks=actions[k];
@@ -1032,6 +1033,7 @@ function renderKPIs(events){
   var branches=events.filter(function(e){var a=e.action||'';return e.category==='branches'&&(a==='branch_maps_click'||a==='branch_whatsapp_click'||a==='branch_phone_click')}).length;
   var shop=events.filter(function(e){return e.action==='shop_click'}).length;
   var ctaClicks=events.filter(function(e){return e.category==='cta'}).length;
+  var expoClicks=events.filter(function(e){return e.action==='expo_maps_click'}).length;
   var totalEvents=events.length;
   var convRate=visitors>0?((wa+phone)/visitors*100).toFixed(1):0;
 
@@ -1042,6 +1044,7 @@ function renderKPIs(events){
     {lbl:'ضغط واتساب',val:wa,c:'green',sub:'WhatsApp Clicks'},
     {lbl:'مكالمات',val:phone,c:'orange',sub:'Phone Calls'},
     {lbl:'تفاعل فروع',val:branches,c:'pink',sub:'Branch Interactions'},
+    {lbl:'📍 المعرض IFOE',val:expoClicks,c:'orange',sub:'Exhibition Map Clicks'},
     {lbl:'ضغط متجر',val:shop,c:'purple',sub:'Shop Clicks'},
     {lbl:'CTA Clicks',val:ctaClicks,c:'gold',sub:'Call-to-Action'},
     {lbl:'إجمالى الأحداث',val:totalEvents,c:'blue',sub:'All Events'},
