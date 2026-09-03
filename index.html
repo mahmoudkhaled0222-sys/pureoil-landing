@@ -1821,8 +1821,11 @@ document.getElementById('franchiseForm').addEventListener('submit',function(e){
     vid:typeof VISITOR_ID!=='undefined'?VISITOR_ID:'',
     category:'franchise',action:'franchise_submit',
     label:name+' | '+phone+' | '+city,
-    page:location.pathname,ref:document.referrer||'direct',
+    page:location.pathname,ref:typeof TRAFFIC_SOURCE!=='undefined'?(TRAFFIC_SOURCE.ref||'direct'):(document.referrer||'direct'),
     platform:typeof TRAFFIC_SOURCE!=='undefined'?TRAFFIC_SOURCE.platform:'direct',
+    utm_source:typeof TRAFFIC_SOURCE!=='undefined'?(TRAFFIC_SOURCE.utm_source||''):'',
+    utm_medium:typeof TRAFFIC_SOURCE!=='undefined'?(TRAFFIC_SOURCE.utm_medium||''):'',
+    utm_campaign:typeof TRAFFIC_SOURCE!=='undefined'?(TRAFFIC_SOURCE.utm_campaign||''):'',
     /* Franchise-specific fields */
     franchise_name:name,franchise_phone:phone,franchise_email:email,
     franchise_city:city,franchise_haslocation:hasLoc,franchise_message:msg,
