@@ -514,10 +514,10 @@ textarea.form-control{resize:vertical;min-height:100px}
 .exhibition{background:linear-gradient(135deg,#0A1628 0%,#1A2744 50%,#0D1B33 100%);color:#fff;overflow:hidden;position:relative}
 .exhibition::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 20%,rgba(212,160,23,0.08) 0%,transparent 60%);pointer-events:none}
 .expo-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch;min-height:500px}
-.expo-visual{position:relative;overflow:hidden}
-.expo-slider{position:relative;width:100%;height:100%;min-height:400px}
+.expo-visual{position:relative;overflow:hidden;min-height:500px}
+.expo-slider{position:absolute;top:0;left:0;right:0;bottom:0}
 .expo-slides{display:flex;height:100%;transition:transform .5s ease}
-.expo-slides img{min-width:100%;height:100%;object-fit:cover;flex-shrink:0}
+.expo-slides img{width:100%;height:100%;object-fit:cover;flex:0 0 100%}
 .expo-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer;z-index:3;transition:background .3s}
 .expo-arrow:hover{background:rgba(212,160,23,.8)}
 .expo-prev{left:10px}.expo-next{right:10px}
@@ -539,7 +539,7 @@ textarea.form-control{resize:vertical;min-height:100px}
 .expo-cta:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,160,23,.5)}
 .expo-cta svg{transition:transform .3s}
 .expo-cta:hover svg{transform:translateX(-4px)}
-@media(max-width:768px){.expo-grid{grid-template-columns:1fr}.expo-visual{min-height:260px;order:-1}.expo-slider{min-height:260px}.expo-content{padding:32px 20px}.expo-title{font-size:22px}}
+@media(max-width:768px){.expo-grid{grid-template-columns:1fr}.expo-visual{min-height:280px;order:-1}.expo-content{padding:32px 20px}.expo-title{font-size:22px}}
 </style>
 </head>
 <body>
