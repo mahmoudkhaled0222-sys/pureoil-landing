@@ -1854,21 +1854,40 @@ document.getElementById('franchiseForm').addEventListener('submit',function(e){
     franchise_experience:data.get('hasBizExperience')||'',
     franchise_timeline:data.get('openTimeline')||''
   };
-  /* Send via fetch + no-cors so browser doesn't block */
-  fetch(DASHBOARD_ENDPOINT,{
-    method:'POST',mode:'no-cors',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(payload)
-  }).catch(function(){});
+  /* Send franchise data with retry logic */
+  var payloadStr=JSON.stringify(payload);
+  function sendFranchise(attempt){
+    fetch(DASHBOARD_ENDPOINT,{
+      method:'POST',mode:'cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:payloadStr
+    }).then(function(r){return r.json()}).then(function(d){
+      if(d&&d.ok){
+        form.style.display='none';
+        var s=document.getElementById('formSuccess');
+        s.style.display='block';
+        s.scrollIntoView({behavior:'smooth',block:'center'});
+      }else if(attempt<3){
+        setTimeout(function(){sendFranchise(attempt+1)},3000);
+      }else{
+        form.style.display='none';
+        var s=document.getElementById('formSuccess');
+        s.style.display='block';
+        s.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    }).catch(function(){
+      if(attempt<3) setTimeout(function(){sendFranchise(attempt+1)},3000);
+      else{
+        form.style.display='none';
+        var s=document.getElementById('formSuccess');
+        s.style.display='block';
+        s.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    });
+  }
+  sendFranchise(1);
   /* Also fire tracking pixels */
   if(typeof trackEvent==='function')trackEvent('engagement','franchise_submit','franchise_form_submitted');
-  /* Show success popup (always — we used no-cors so we can't read response) */
-  setTimeout(function(){
-    form.style.display='none';
-    var s=document.getElementById('formSuccess');
-    s.style.display='block';
-    s.scrollIntoView({behavior:'smooth',block:'center'});
-  },400);
 });
 
 /* ===== FLOATING WHATSAPP ===== */
@@ -2109,42 +2128,8 @@ document.querySelectorAll('#royal-purple .btn').forEach(function(el){
 
 /* --- Franchise Form Submit --- removed duplicate listener that caused empty rows */
 
-/* --- Scroll Depth Tracking --- */
-var scrollMilestones={25:false,50:false,75:false,100:false};
-window.addEventListener('scroll',function(){
-  var scrollPct=Math.round((window.scrollY/(document.body.scrollHeight-window.innerHeight))*100);
-  [25,50,75,100].forEach(function(m){
-    if(scrollPct>=m&&!scrollMilestones[m]){
-      scrollMilestones[m]=true;
-      trackEvent('engagement','scroll_depth','scrolled_'+m+'_percent');
-    }
-  });
-},{passive:true});
-
-/* --- Section View Tracking (IntersectionObserver) --- */
-var sectionIds=['hero','about','services','products','kraftool','royal-purple','certificates','testimonials','branches','franchise','faq','footer'];
-if('IntersectionObserver' in window){
-  var sectionObs=new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if(entry.isIntersecting){
-        trackEvent('navigation','section_view',entry.target.id);
-        sectionObs.unobserve(entry.target);
-      }
-    });
-  },{threshold:0.3});
-  sectionIds.forEach(function(id){
-    var el=document.getElementById(id);
-    if(el) sectionObs.observe(el);
-  });
-}
-
-/* --- Time on Page Tracking --- */
-var timeIntervals=[30,60,120,300];
-timeIntervals.forEach(function(sec){
-  setTimeout(function(){
-    trackEvent('engagement','time_on_page','stayed_'+sec+'_seconds');
-  },sec*1000);
-});
+/* --- Scroll/Section/Time tracking DISABLED temporarily to reduce Apps Script quota usage ---
+   Re-enable after exhibition ends (Sept 5) */
 
 /* ===== Exhibition Slider ===== */
 (function(){
