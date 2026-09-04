@@ -2107,13 +2107,7 @@ document.querySelectorAll('#royal-purple .btn').forEach(function(el){
   });
 });
 
-/* --- Franchise Form Submit --- */
-var franchiseForm=document.getElementById('franchiseForm');
-if(franchiseForm){
-  franchiseForm.addEventListener('submit',function(){
-    trackEvent('franchise','franchise_submit','franchise_form_submitted');
-  });
-}
+/* --- Franchise Form Submit --- removed duplicate listener that caused empty rows */
 
 /* --- Scroll Depth Tracking --- */
 var scrollMilestones={25:false,50:false,75:false,100:false};
