@@ -515,8 +515,15 @@ textarea.form-control{resize:vertical;min-height:100px}
 .exhibition::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 20%,rgba(212,160,23,0.08) 0%,transparent 60%);pointer-events:none}
 .expo-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch;min-height:500px}
 .expo-visual{position:relative;overflow:hidden}
-.expo-visual img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
-.expo-visual:hover img{transform:scale(1.03)}
+.expo-slider{position:relative;width:100%;height:100%;min-height:400px}
+.expo-slides{display:flex;height:100%;transition:transform .5s ease}
+.expo-slides img{min-width:100%;height:100%;object-fit:cover;flex-shrink:0}
+.expo-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer;z-index:3;transition:background .3s}
+.expo-arrow:hover{background:rgba(212,160,23,.8)}
+.expo-prev{left:10px}.expo-next{right:10px}
+.expo-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:3}
+.expo-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.4);border:none;cursor:pointer;padding:0;transition:all .3s}
+.expo-dot.active{background:#F5C518;width:24px;border-radius:4px}
 .expo-badge-live{position:absolute;top:20px;right:20px;background:linear-gradient(135deg,#e53e3e,#c53030);color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;animation:pulse-live 2s infinite;z-index:2}
 @keyframes pulse-live{0%,100%{box-shadow:0 0 0 0 rgba(229,62,62,.5)}50%{box-shadow:0 0 0 10px rgba(229,62,62,0)}}
 .expo-content{display:flex;flex-direction:column;justify-content:center;padding:48px 40px;position:relative;z-index:1}
@@ -532,7 +539,7 @@ textarea.form-control{resize:vertical;min-height:100px}
 .expo-cta:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,160,23,.5)}
 .expo-cta svg{transition:transform .3s}
 .expo-cta:hover svg{transform:translateX(-4px)}
-@media(max-width:768px){.expo-grid{grid-template-columns:1fr}.expo-visual{min-height:300px;order:-1}.expo-content{padding:32px 20px}.expo-title{font-size:22px}}
+@media(max-width:768px){.expo-grid{grid-template-columns:1fr}.expo-visual{min-height:260px;order:-1}.expo-slider{min-height:260px}.expo-content{padding:32px 20px}.expo-title{font-size:22px}}
 </style>
 </head>
 <body>
@@ -727,7 +734,22 @@ textarea.form-control{resize:vertical;min-height:100px}
       </div>
       <div class="expo-visual">
         <span class="expo-badge-live">🔴 اليوم الثاني!</span>
-        <img src="images/exhibition/booth-1.jpg" alt="جناح الزيت النقي — معرض IFOE 2026" loading="lazy">
+        <div class="expo-slider" id="expoSlider">
+          <div class="expo-slides">
+            <img src="images/exhibition/booth-1.jpg" alt="جناح الزيت النقي — معرض IFOE 2026" loading="lazy">
+            <img src="images/exhibition/booth-3.jpg" alt="الجناح — عرض كامل" loading="lazy">
+            <img src="images/exhibition/booth-4.jpg" alt="اجتماعات مع المستثمرين" loading="lazy">
+            <img src="images/exhibition/booth-5.jpg" alt="شاشة الزيت النقي" loading="lazy">
+            <img src="images/exhibition/booth-6.jpg" alt="توقيع اتفاقية امتياز" loading="lazy">
+            <img src="images/exhibition/booth-7.jpg" alt="فريق الزيت النقي" loading="lazy">
+            <img src="images/exhibition/booth-8.jpg" alt="توقيع الاتفاقية" loading="lazy">
+            <img src="images/exhibition/booth-9.jpg" alt="تفاعل الزوار" loading="lazy">
+            <img src="images/exhibition/booth-10.jpg" alt="تكريم الزيت النقي" loading="lazy">
+          </div>
+          <button class="expo-arrow expo-prev" onclick="expoSlide(-1)">❮</button>
+          <button class="expo-arrow expo-next" onclick="expoSlide(1)">❯</button>
+          <div class="expo-dots" id="expoDots"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2130,6 +2152,24 @@ timeIntervals.forEach(function(sec){
     trackEvent('engagement','time_on_page','stayed_'+sec+'_seconds');
   },sec*1000);
 });
+
+/* ===== Exhibition Slider ===== */
+(function(){
+  var idx=0,slides=document.querySelectorAll('#expoSlider .expo-slides img'),
+      track=document.querySelector('#expoSlider .expo-slides'),
+      dotsC=document.getElementById('expoDots'),total=slides.length;
+  if(!total)return;
+  for(var i=0;i<total;i++){var d=document.createElement('button');d.className='expo-dot'+(i===0?' active':'');d.setAttribute('data-i',i);d.onclick=function(){goTo(+this.getAttribute('data-i'))};dotsC.appendChild(d)}
+  function goTo(n){idx=(n+total)%total;track.style.transform='translateX('+(-idx*100)+'%)';var dots=dotsC.querySelectorAll('.expo-dot');for(var j=0;j<dots.length;j++){dots[j].className='expo-dot'+(j===idx?' active':'')}}
+  window.expoSlide=function(d){goTo(idx+d)};
+  var autoI=setInterval(function(){goTo(idx+1)},4000);
+  var el=document.getElementById('expoSlider');
+  el.addEventListener('mouseenter',function(){clearInterval(autoI)});
+  el.addEventListener('mouseleave',function(){autoI=setInterval(function(){goTo(idx+1)},4000)});
+  /* Swipe support */
+  var sx=0;el.addEventListener('touchstart',function(e){sx=e.touches[0].clientX},{passive:true});
+  el.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40){dx<0?goTo(idx+1):goTo(idx-1)}},{passive:true});
+})();
 
 </script>
 </body>
