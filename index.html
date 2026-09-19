@@ -511,27 +511,22 @@ textarea.form-control{resize:vertical;min-height:100px}
 @media(max-width:768px){.conf-grid{grid-template-columns:1fr}.conf-gallery{min-height:280px;order:-1}.conf-content{padding:32px 20px}}
 
 /* Exhibition / IFOE */
-.exhibition{background:linear-gradient(135deg,#0A1628 0%,#1A2744 50%,#0D1B33 100%);color:#fff;overflow:hidden;position:relative}
-.exhibition::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 20%,rgba(212,160,23,0.08) 0%,transparent 60%);pointer-events:none}
-.expo-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:start;min-height:500px}
-.expo-visual{position:relative;overflow:hidden}
-.expo-visual img{width:100%;height:100%;object-fit:cover}
-.expo-badge-live{position:absolute;top:20px;right:20px;background:linear-gradient(135deg,#e53e3e,#c53030);color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;animation:pulse-live 2s infinite;z-index:2}
-@keyframes pulse-live{0%,100%{box-shadow:0 0 0 0 rgba(229,62,62,.5)}50%{box-shadow:0 0 0 10px rgba(229,62,62,0)}}
-.expo-content{display:flex;flex-direction:column;justify-content:center;padding:48px 40px;position:relative;z-index:1}
-.expo-overline{display:inline-block;background:linear-gradient(135deg,var(--gold),#F4D03F);color:#000;font-size:12px;font-weight:800;padding:5px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:1px;text-transform:uppercase;width:fit-content}
-.expo-title{font-size:28px;font-weight:800;line-height:1.4;margin-bottom:12px}
-.expo-title span{color:var(--gold)}
-.expo-subtitle{font-size:15px;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:24px}
-.expo-details{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
-.expo-detail{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,.85)}
-.expo-detail svg{flex-shrink:0;color:var(--gold)}
-.expo-detail strong{color:#fff}
-.expo-cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--gold),#F4D03F);color:#000;font-size:16px;font-weight:800;padding:14px 32px;border-radius:12px;text-decoration:none;transition:all .3s;box-shadow:0 4px 20px rgba(212,160,23,.3);width:fit-content}
-.expo-cta:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,160,23,.5)}
-.expo-cta svg{transition:transform .3s}
-.expo-cta:hover svg{transform:translateX(-4px)}
-@media(max-width:768px){.expo-grid{grid-template-columns:1fr}.expo-visual{order:-1}.expo-content{padding:32px 20px}.expo-title{font-size:22px}}
+/* ===== NATIONAL DAY 96 PROMO ===== */
+.nd96-banner{background:linear-gradient(135deg,#006C35 0%,#004D25 50%,#003A1C 100%);color:#fff;padding:48px 0;position:relative;overflow:hidden}
+.nd96-banner::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5L35 20H50L38 30L42 45L30 35L18 45L22 30L10 20H25Z' fill='%23ffffff' opacity='0.02'/%3E%3C/svg%3E");pointer-events:none}
+.nd96-inner{text-align:center;position:relative;z-index:1;max-width:800px;margin:0 auto;padding:0 20px}
+.nd96-badge{display:inline-block;background:rgba(255,255,255,.12);color:#fff;padding:8px 22px;border-radius:25px;font-size:14px;font-weight:700;margin-bottom:16px;border:1px solid rgba(255,255,255,.2);letter-spacing:.5px}
+.nd96-title{font-size:34px;font-weight:900;margin-bottom:8px;line-height:1.3}
+.nd96-title span{color:#F5C518}
+.nd96-sub{font-size:17px;color:#A7F3D0;margin-bottom:28px;font-weight:600}
+.nd96-offers{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin-bottom:24px}
+.nd96-offer{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:20px 24px;text-align:center;min-width:200px;backdrop-filter:blur(4px);transition:transform .3s}
+.nd96-offer:hover{transform:translateY(-3px)}
+.nd96-offer .icon{font-size:32px;margin-bottom:6px}
+.nd96-offer .txt{font-size:15px;font-weight:700;line-height:1.6}
+.nd96-offer .txt em{color:#F5C518;font-style:normal;font-size:24px;display:block;font-weight:900}
+.nd96-note{color:#D1FAE5;font-size:13px;opacity:.8;margin-top:8px}
+@media(max-width:768px){.nd96-title{font-size:24px}.nd96-sub{font-size:14px}.nd96-offer{min-width:140px;padding:14px 16px}.nd96-offers{gap:10px}}
 </style>
 </head>
 <body>
@@ -691,46 +686,7 @@ textarea.form-control{resize:vertical;min-height:100px}
   </div>
 </section>
 
-<!-- ===== IFOE EXHIBITION ===== -->
-<section class="exhibition section-padding" id="exhibition">
-  <div class="container">
-    <div class="expo-grid reveal">
-      <div class="expo-content">
-        <span class="expo-overline">🏆 IFOE KSA 2026</span>
-        <h2 class="expo-title">الزيت النقي في <span>معرض فرص الامتياز التجاري</span> الدولي</h2>
-        <p class="expo-subtitle">الزيت النقي — أكبر شبكة تغيير زيوت وصيانة سريعة بالمملكة (+28 فرع) — نشارك في النسخة الرابعة من معرض IFOE الدولي للامتياز التجاري. زورنا في جناحنا واكتشف كيف تمتلك فرع ناجح بعائد 25% سنوياً!</p>
-        <div class="expo-details">
-          <div class="expo-detail">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <strong>3 - 5 سبتمبر 2026</strong>
-          </div>
-          <div class="expo-detail">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <strong>4 عصراً - 11 مساءً</strong>
-          </div>
-          <div class="expo-detail">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <strong>مركز جدة للمعارض والفعاليات</strong>
-          </div>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
-          <span style="background:rgba(212,160,23,.15);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700">🛢️ +28 فرع بالمملكة</span>
-          <span style="background:rgba(212,160,23,.15);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700">🇺🇸 زيوت أمريكية أصلية</span>
-          <span style="background:rgba(212,160,23,.15);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700">🇩🇪 منظفات ألمانية KRAFTOL</span>
-          <span style="background:rgba(212,160,23,.15);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700">📈 عائد 25% سنوياً</span>
-        </div>
-        <a href="https://maps.app.goo.gl/72WKGhtZ21VpBuaRA" target="_blank" rel="noopener" class="expo-cta" onclick="if(typeof trackEvent==='function')trackEvent('exhibition','expo_maps_click','IFOE 2026 — مركز جدة للمعارض');">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          📍 وصّلني للمعرض
-        </a>
-      </div>
-      <div class="expo-visual">
-        <span class="expo-badge-live">🔴 اليوم الأخير!</span>
-        <img src="images/exhibition/booth-3.jpg" alt="جناح الزيت النقي — معرض IFOE 2026" loading="lazy">
-      </div>
-    </div>
-  </div>
-</section>
+<!-- Exhibition section removed after IFOE ended -->
 
 <!-- ===== ABOUT / WHY US ===== -->
 <section class="about section-padding" id="about">
@@ -1309,6 +1265,30 @@ textarea.form-control{resize:vertical;min-height:100px}
       <button class="carousel-btn" id="carouselNext" aria-label="التالي">←</button>
     </div>
     <div class="carousel-dots" id="carouselDots"></div>
+  </div>
+</section>
+
+<!-- ===== NATIONAL DAY 96 PROMO ===== -->
+<section class="nd96-banner" id="national-day">
+  <div class="nd96-inner reveal">
+    <span class="nd96-badge">🇸🇦 اليوم الوطني السعودي 96</span>
+    <h2 class="nd96-title">خصم <span>50%</span> على جميع خدمات الزيت النقي</h2>
+    <p class="nd96-sub">بمناسبة اليوم الوطني 96 — نقدّم لك عروض ما تتكرر 🔥</p>
+    <div class="nd96-offers">
+      <div class="nd96-offer">
+        <div class="icon">🛢️</div>
+        <div class="txt"><em>خصم 50%</em>على جميع الخدمات</div>
+      </div>
+      <div class="nd96-offer">
+        <div class="icon">🔧</div>
+        <div class="txt"><em>فلتر زيت مجاني</em>مع كل خدمة</div>
+      </div>
+      <div class="nd96-offer">
+        <div class="icon">⚙️</div>
+        <div class="txt"><em>تغيير زيت الجير مجاني</em>عند استخدام زيوت بيور زويل</div>
+      </div>
+    </div>
+    <p class="nd96-note">📍 العرض متاح في جميع فروع الزيت النقي — دور أقرب فرع لك 👇</p>
   </div>
 </section>
 
