@@ -512,21 +512,17 @@ textarea.form-control{resize:vertical;min-height:100px}
 
 /* Exhibition / IFOE */
 /* ===== NATIONAL DAY 96 PROMO ===== */
-.nd96-banner{background:linear-gradient(135deg,#006C35 0%,#004D25 50%,#003A1C 100%);color:#fff;padding:48px 0;position:relative;overflow:hidden}
-.nd96-banner::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5L35 20H50L38 30L42 45L30 35L18 45L22 30L10 20H25Z' fill='%23ffffff' opacity='0.02'/%3E%3C/svg%3E");pointer-events:none}
-.nd96-inner{text-align:center;position:relative;z-index:1;max-width:800px;margin:0 auto;padding:0 20px}
-.nd96-badge{display:inline-block;background:rgba(255,255,255,.12);color:#fff;padding:8px 22px;border-radius:25px;font-size:14px;font-weight:700;margin-bottom:16px;border:1px solid rgba(255,255,255,.2);letter-spacing:.5px}
-.nd96-title{font-size:34px;font-weight:900;margin-bottom:8px;line-height:1.3}
+.nd96-banner{background:linear-gradient(135deg,#006C35 0%,#004D25 100%);color:#fff;padding:28px 0;position:relative;overflow:hidden;border-radius:20px;margin:0 auto 32px;max-width:1200px}
+.nd96-inner{text-align:center;position:relative;z-index:1;padding:0 20px}
+.nd96-badge{display:inline-block;background:rgba(255,255,255,.12);color:#fff;padding:6px 18px;border-radius:25px;font-size:13px;font-weight:700;margin-bottom:12px;border:1px solid rgba(255,255,255,.2)}
+.nd96-title{font-size:28px;font-weight:900;margin-bottom:16px;line-height:1.3}
 .nd96-title span{color:#F5C518}
-.nd96-sub{font-size:17px;color:#A7F3D0;margin-bottom:28px;font-weight:600}
-.nd96-offers{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin-bottom:24px}
-.nd96-offer{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:20px 24px;text-align:center;min-width:200px;backdrop-filter:blur(4px);transition:transform .3s}
-.nd96-offer:hover{transform:translateY(-3px)}
-.nd96-offer .icon{font-size:32px;margin-bottom:6px}
-.nd96-offer .txt{font-size:15px;font-weight:700;line-height:1.6}
-.nd96-offer .txt em{color:#F5C518;font-style:normal;font-size:24px;display:block;font-weight:900}
-.nd96-note{color:#D1FAE5;font-size:13px;opacity:.8;margin-top:8px}
-@media(max-width:768px){.nd96-title{font-size:24px}.nd96-sub{font-size:14px}.nd96-offer{min-width:140px;padding:14px 16px}.nd96-offers{gap:10px}}
+.nd96-offers{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.nd96-offer{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:12px 18px;text-align:center}
+.nd96-offer .txt{font-size:13px;font-weight:700;line-height:1.5}
+.nd96-offer .txt em{color:#F5C518;font-style:normal;font-size:18px;display:block;font-weight:900}
+.nd96-note{color:#D1FAE5;font-size:13px;margin:0}
+@media(max-width:768px){.nd96-title{font-size:22px}.nd96-offer{padding:10px 12px}.nd96-offer .txt{font-size:12px}.nd96-offer .txt em{font-size:15px}.nd96-banner{margin:0 12px 24px;border-radius:16px;padding:20px 0}}
 </style>
 </head>
 <body>
@@ -1268,32 +1264,28 @@ textarea.form-control{resize:vertical;min-height:100px}
   </div>
 </section>
 
-<!-- ===== NATIONAL DAY 96 PROMO ===== -->
-<section class="nd96-banner" id="national-day">
-  <div class="nd96-inner reveal">
-    <span class="nd96-badge">🇸🇦 اليوم الوطني السعودي 96</span>
+<!-- ===== BRANCHES (with National Day 96 banner inside) ===== -->
+<section class="branches section-padding" id="branches">
+
+<!-- National Day 96 compact banner -->
+<div class="nd96-banner" id="national-day">
+  <div class="nd96-inner">
+    <span class="nd96-badge">🇸🇦 اليوم الوطني 96</span>
     <h2 class="nd96-title">خصم <span>50%</span> على جميع خدمات الزيت النقي</h2>
-    <p class="nd96-sub">بمناسبة اليوم الوطني 96 — نقدّم لك عروض ما تتكرر 🔥</p>
     <div class="nd96-offers">
       <div class="nd96-offer">
-        <div class="icon">🛢️</div>
-        <div class="txt"><em>خصم 50%</em>على جميع الخدمات</div>
+        <div class="txt">🛢️ <em>خصم 50%</em>على جميع الخدمات</div>
       </div>
       <div class="nd96-offer">
-        <div class="icon">🔧</div>
-        <div class="txt"><em>فلتر زيت مجاني</em>مع كل خدمة</div>
+        <div class="txt">🔧 <em>فلتر زيت مجاني</em>عند استخدام زيوت بيور زويل</div>
       </div>
       <div class="nd96-offer">
-        <div class="icon">⚙️</div>
-        <div class="txt"><em>تغيير زيت الجير مجاني</em>عند استخدام زيوت بيور زويل</div>
+        <div class="txt">⚙️ <em>تغيير زيت الجير مجاني</em>عند استخدام زيوت بيور زويل</div>
       </div>
     </div>
-    <p class="nd96-note">📍 العرض متاح في جميع فروع الزيت النقي — دور أقرب فرع لك 👇</p>
+    <p class="nd96-note">📅 العرض ساري من 20 حتى 26 سبتمبر — في جميع الفروع 👇</p>
   </div>
-</section>
-
-<!-- ===== BRANCHES ===== -->
-<section class="branches section-padding" id="branches">
+</div>
   <div class="container">
     <div class="section-header">
       <span class="badge badge-gold reveal">فروعنا</span>
